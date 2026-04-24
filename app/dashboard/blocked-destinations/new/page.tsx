@@ -1,0 +1,26 @@
+import { Ban } from 'lucide-react'
+import { createClient } from '@/lib/supabase/server'
+import BlockedDestinationForm from '@/components/blocked-destination-form'
+
+export default async function NewBlockedDestinationPage() {
+  const supabase = await createClient()
+  const [{ data: customers }, { data: vendors }] = await Promise.all([
+    supabase.from('customers').select('id, name, ref_number').eq('active', true).order('name'),
+    supabase.from('vendors').select('id, name').eq('active', true).order('name'),
+  ])
+
+  return (
+    <div className="flex flex-col gap-6">
+      <div className="flex items-center gap-3">
+        <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-rose-500/10 border border-rose-500/20">
+          <Ban className="h-5 w-5 text-rose-400" />
+        </div>
+        <div>
+          <h1 className="text-2xl font-semibold text-foreground">Block Destination</h1>
+          <p className="text-sm text-muted-foreground">Restrict traffic to a specific MCC/MNC</p>
+        </div>
+      </div>
+      <BlockedDestinationForm customers={customers ?? []} vendors={vendors ?? []} />
+    </div>
+  )
+}
