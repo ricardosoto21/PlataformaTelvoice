@@ -4,7 +4,6 @@
  */
 
 import type { Session } from 'smpp'
-import { getEngineDb } from './db'
 
 export type BindMode = 'transmitter' | 'receiver' | 'transceiver'
 
@@ -138,30 +137,6 @@ export class SessionManager {
       if (session !== undefined) v.session = session
       if (status === 'connected') v.connectedAt = new Date()
       if (status === 'disconnected') v.session = null
-      
-      // Llamamos a la BD en segundo plano sin detener el motor
-      this.syncVendorStatusToDb(vendorId, status, v.connectedAt)
-    }
-  }
-
-  // Función asíncrona "silenciosa" para mantener Supabase al día
-  private async syncVendorStatusToDb(vendorId: string, status: string, connectedAt: Date | null) {
-    try {
-      const db = getEngineDb()
-      let dbStatus = 'DISCONNECTED'
-      
-      if (status === 'connected') dbStatus = 'CONNECTED'
-      if (status === 'reconnecting' || status === 'connecting') dbStatus = 'RECONNECTING'
-
-      await db
-        .from('vendors')
-        .update({ 
-          connection_status: dbStatus,
-          last_connected_at: status === 'connected' ? new Date().toISOString() : (connectedAt?.toISOString() || null)
-        })
-        .eq('id', vendorId)
-    } catch (error) {
-      console.error(`[session-manager] No se pudo actualizar DB para vendor ${vendorId}:`, error)
     }
   }
 

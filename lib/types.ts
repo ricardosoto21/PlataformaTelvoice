@@ -2,16 +2,7 @@
 
 export type UserRole = 'ADMIN' | 'MANAGER' | 'USER'
 export type CustomerType = 'CLIENT' | 'WHOLESALE' | 'RESELLER'
-export type Currency =
-  | 'USD'
-  | 'EUR'
-  | 'CLP'
-  | 'MXN'
-  | 'BRL'
-  | 'ARS'
-  | 'COP'
-  | 'PEN'
-  | 'GBP'
+export type Currency = 'USD' | 'EUR' | 'CLP' | 'MXN' | 'BRL' | 'ARS' | 'COP' | 'PEN'
 export type BindMode = 'TX' | 'RX' | 'TRX'
 export type ConnectionStatus = 'CONNECTED' | 'DISCONNECTED' | 'RECONNECTING'
 
@@ -85,26 +76,6 @@ export interface SmppAccount {
   active: boolean
   created_at: string
   updated_at: string
-}
-
-export interface CustomerOption {
-  id: string
-  name: string
-  ref_number: string
-}
-
-export interface VendorOption {
-  id: string
-  name: string
-}
-
-export interface CurrencyRecord {
-  id?: string
-  code: Currency | string
-  name: string
-  symbol: string | null
-  rate_to_usd: number | null
-  active?: boolean
 }
 
 // Form types for creating/updating
@@ -515,7 +486,7 @@ export interface ReportFilters {
   endDate?: string
   customerId?: string
   vendorId?: string
-  status?: MessageStatus | 'all'
+  status?: MessageStatus
   country?: string
   mcc?: string
 }
@@ -557,8 +528,8 @@ export interface Invoice {
   updated_at: string
   paid_at: string | null
   sent_at: string | null
-  customer?: (Customer & { company_name?: string | null; address?: string | null; country?: string | null }) | null
-  vendor?: (Vendor & { address?: string | null; country?: string | null }) | null
+  customer?: Customer | null
+  vendor?: Vendor | null
   items?: InvoiceItem[]
 }
 

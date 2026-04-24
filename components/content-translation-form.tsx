@@ -13,11 +13,11 @@ import {
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { ArrowRight } from 'lucide-react'
 import { createContentTranslation, updateContentTranslation } from '@/lib/content-translation-actions'
-import type { ContentTranslation, CustomerOption, ContentTranslationFormData, ScopeType, MatchType } from '@/lib/types'
+import type { ContentTranslation, Customer, ContentTranslationFormData, ScopeType, MatchType } from '@/lib/types'
 
 interface ContentTranslationFormProps {
   rule?: ContentTranslation
-  customers: CustomerOption[]
+  customers: Customer[]
 }
 
 export default function ContentTranslationForm({ rule, customers }: ContentTranslationFormProps) {

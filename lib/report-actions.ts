@@ -66,7 +66,7 @@ export async function getRetailReport(filters: ReportFilters) {
   if (filters.endDate) {
     query = query.lte('submitted_at', filters.endDate)
   }
-  if (filters.customerId && filters.customerId !== 'all') {
+  if (filters.customerId) {
     query = query.eq('customer_id', filters.customerId)
   }
   if (filters.country) {
@@ -122,7 +122,7 @@ export async function getWholesaleReport(filters: ReportFilters) {
   if (filters.endDate) {
     query = query.lte('submitted_at', filters.endDate)
   }
-  if (filters.customerId && filters.customerId !== 'all') {
+  if (filters.customerId) {
     query = query.eq('customer_id', filters.customerId)
   }
   if (filters.mcc) {
@@ -181,7 +181,7 @@ export async function getVendorReport(filters: ReportFilters) {
   if (filters.endDate) {
     query = query.lte('submitted_at', filters.endDate)
   }
-  if (filters.vendorId && filters.vendorId !== 'all') {
+  if (filters.vendorId) {
     query = query.eq('vendor_id', filters.vendorId)
   }
   

@@ -324,7 +324,7 @@ export default function SMPPEnginePage() {
                         {v.connectedAt ? formatDistanceToNow(new Date(v.connectedAt), { addSuffix: true }) : '-'}
                       </TableCell>
                       <TableCell className="text-right">
-                        {v.status === 'connected' || v.status === 'connecting' ? (
+                        {v.status === 'connected' ? (
                           <Button
                             variant="outline"
                             size="sm"

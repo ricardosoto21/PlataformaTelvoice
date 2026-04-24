@@ -37,7 +37,6 @@ declare module 'smpp' {
     receipted_message_id?: string
     // generic nack
     [key: string]: unknown
-    response(options?: Partial<PDU>): PDU
   }
 
   // -------------------------------------------------------
@@ -53,16 +52,11 @@ declare module 'smpp' {
     resume(): void
     close(): void
     destroy(): void
-    bind_receiver(params: Partial<PDU>, callback: (pdu: PDU) => void): void
-    bind_transmitter(params: Partial<PDU>, callback: (pdu: PDU) => void): void
-    bind_transceiver(params: Partial<PDU>, callback: (pdu: PDU) => void): void
 
-    on(event: 'connect', listener: () => void): this
     on(event: 'bind_transceiver', listener: (pdu: PDU) => void): this
     on(event: 'bind_transmitter', listener: (pdu: PDU) => void): this
     on(event: 'bind_receiver', listener: (pdu: PDU) => void): this
     on(event: 'submit_sm', listener: (pdu: PDU) => void): this
-    on(event: 'submit_sm_resp', listener: (pdu: PDU) => void): this
     on(event: 'deliver_sm', listener: (pdu: PDU) => void): this
     on(event: 'enquire_link', listener: (pdu: PDU) => void): this
     on(event: 'unbind', listener: (pdu: PDU) => void): this

@@ -12,11 +12,11 @@ import {
 } from '@/components/ui/select'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { createBlockList, updateBlockList } from '@/lib/block-list-actions'
-import type { BlockList, CustomerOption, BlockListFormData, BlockListType, ScopeType } from '@/lib/types'
+import type { BlockList, Customer, BlockListFormData, BlockListType, ScopeType } from '@/lib/types'
 
 interface BlockListFormProps {
   blockList?: BlockList
-  customers: CustomerOption[]
+  customers: Customer[]
 }
 
 export default function BlockListForm({ blockList, customers }: BlockListFormProps) {

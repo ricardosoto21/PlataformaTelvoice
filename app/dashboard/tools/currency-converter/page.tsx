@@ -1,13 +1,12 @@
 import { createClient } from '@/lib/supabase/server'
 import { CurrencyConverterClient } from './currency-converter-client'
-import type { CurrencyRecord } from '@/lib/types'
 
 export default async function CurrencyConverterPage() {
   const supabase = await createClient()
 
   const { data: currencies } = await supabase
     .from('currencies')
-    .select('code, name, symbol, rate_to_usd')
+    .select('code, name, symbol, exchange_rate')
     .eq('active', true)
     .order('code', { ascending: true })
 
@@ -17,7 +16,7 @@ export default async function CurrencyConverterPage() {
         <h1 className="text-2xl font-semibold tracking-tight">Currency Converter</h1>
         <p className="text-muted-foreground">Convert amounts between currencies using platform exchange rates</p>
       </div>
-      <CurrencyConverterClient currencies={(currencies ?? []) as CurrencyRecord[]} />
+      <CurrencyConverterClient currencies={currencies ?? []} />
     </div>
   )
 }

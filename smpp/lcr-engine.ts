@@ -87,15 +87,10 @@ export class LCREngine {
       priority: number
       qualityScore: number
     }
-    type RatePlanRateRow = { rate: number; mcc: string; mnc: string | null }
-    type RatePlanRow = { id: string; rate_plan_rates: RatePlanRateRow[] }
-    type VendorRow = { id: string; name: string; status?: string }
     const candidates: RouteCandidate[] = []
 
     for (const route of routes) {
-      const ratePlan = Array.isArray(route.rate_plans)
-        ? (route.rate_plans[0] as RatePlanRow | undefined)
-        : (route.rate_plans as RatePlanRow | null)
+      const ratePlan = route.rate_plans as { id: string; rate_plan_rates: { rate: number; mcc: string; mnc: string }[] } | null
       if (!ratePlan) continue
 
       // Find exact MCC+MNC match first, then MCC-only (wildcard MNC)
@@ -106,9 +101,7 @@ export class LCREngine {
 
       if (!matchedRate) continue
 
-      const vendor = Array.isArray(route.vendors)
-        ? (route.vendors[0] as VendorRow | undefined)
-        : (route.vendors as VendorRow | null)
+      const vendor = route.vendors as { id: string; name: string } | null
       if (!vendor) continue
 
       candidates.push({

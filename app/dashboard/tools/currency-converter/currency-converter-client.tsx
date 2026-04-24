@@ -1,31 +1,40 @@
 'use client'
 
-import { useMemo, useState } from 'react'
-import { ArrowLeftRight, DollarSign, TrendingUp } from 'lucide-react'
-import { Button } from '@/components/ui/button'
+import { useState, useMemo } from 'react'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
-import type { CurrencyRecord } from '@/lib/types'
+import { Button } from '@/components/ui/button'
+import { Badge } from '@/components/ui/badge'
+import { ArrowLeftRight, DollarSign, TrendingUp } from 'lucide-react'
 
-export function CurrencyConverterClient({ currencies }: { currencies: CurrencyRecord[] }) {
+type Currency = {
+  code: string
+  name: string
+  symbol: string | null
+  rate_to_usd: number | null
+}
+
+export function CurrencyConverterClient({ currencies }: { currencies: Currency[] }) {
   const [amount, setAmount] = useState('100')
-  const [from, setFrom] = useState(currencies.find((c) => c.code === 'USD')?.code ?? currencies[0]?.code ?? '')
-  const [to, setTo] = useState(currencies.find((c) => c.code === 'EUR')?.code ?? currencies[1]?.code ?? '')
+  const [from, setFrom] = useState(currencies.find(c => c.code === 'USD')?.code ?? currencies[0]?.code ?? '')
+  const [to, setTo] = useState(currencies.find(c => c.code === 'EUR')?.code ?? currencies[1]?.code ?? '')
 
-  const fromCurrency = currencies.find((c) => c.code === from)
-  const toCurrency = currencies.find((c) => c.code === to)
+  const fromCurrency = currencies.find(c => c.code === from)
+  const toCurrency   = currencies.find(c => c.code === to)
 
   const result = useMemo(() => {
     const amt = parseFloat(amount)
     if (isNaN(amt) || !fromCurrency || !toCurrency) return null
 
     const fromRate = fromCurrency.rate_to_usd ?? 1
-    const toRate = toCurrency.rate_to_usd ?? 1
+    const toRate   = toCurrency.rate_to_usd ?? 1
 
+    // Rates are stored as "per 1 USD", so convert: amt / fromRate * toRate
     const inUsd = amt / fromRate
-    return inUsd * toRate
+    const converted = inUsd * toRate
+    return converted
   }, [amount, fromCurrency, toCurrency])
 
   const swapCurrencies = () => {
@@ -36,13 +45,13 @@ export function CurrencyConverterClient({ currencies }: { currencies: CurrencyRe
   const formatAmount = (val: number, symbol: string | null) =>
     `${symbol ?? ''}${val.toLocaleString('en-US', { minimumFractionDigits: 4, maximumFractionDigits: 4 })}`
 
-  const rate =
-    fromCurrency && toCurrency && fromCurrency.rate_to_usd && toCurrency.rate_to_usd
-      ? toCurrency.rate_to_usd / fromCurrency.rate_to_usd
-      : null
+  const rate = fromCurrency && toCurrency && fromCurrency.rate_to_usd && toCurrency.rate_to_usd
+    ? (toCurrency.rate_to_usd / fromCurrency.rate_to_usd)
+    : null
 
   return (
-    <div className="grid max-w-2xl gap-6">
+    <div className="grid gap-6 max-w-2xl">
+      {/* Main Converter */}
       <Card className="border-border/50">
         <CardHeader className="pb-4">
           <div className="flex items-center gap-2">
@@ -56,7 +65,7 @@ export function CurrencyConverterClient({ currencies }: { currencies: CurrencyRe
             <Input
               type="number"
               value={amount}
-              onChange={(e) => setAmount(e.target.value)}
+              onChange={e => setAmount(e.target.value)}
               className="h-12 text-xl font-mono font-semibold"
               placeholder="0.00"
             />
@@ -70,17 +79,23 @@ export function CurrencyConverterClient({ currencies }: { currencies: CurrencyRe
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
-                  {currencies.map((c) => (
+                  {currencies.map(c => (
                     <SelectItem key={c.code} value={c.code}>
-                      <span className="mr-2 font-mono font-medium">{c.code}</span>
-                      <span className="text-sm text-muted-foreground">{c.name}</span>
+                      <span className="font-mono font-medium mr-2">{c.code}</span>
+                      <span className="text-muted-foreground text-sm">{c.name}</span>
                     </SelectItem>
                   ))}
                 </SelectContent>
               </Select>
             </div>
 
-            <Button variant="outline" size="icon" className="mb-0 h-10 w-10" onClick={swapCurrencies} title="Swap currencies">
+            <Button
+              variant="outline"
+              size="icon"
+              className="h-10 w-10 mb-0"
+              onClick={swapCurrencies}
+              title="Swap currencies"
+            >
               <ArrowLeftRight className="h-4 w-4" />
             </Button>
 
@@ -91,10 +106,10 @@ export function CurrencyConverterClient({ currencies }: { currencies: CurrencyRe
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
-                  {currencies.map((c) => (
+                  {currencies.map(c => (
                     <SelectItem key={c.code} value={c.code}>
-                      <span className="mr-2 font-mono font-medium">{c.code}</span>
-                      <span className="text-sm text-muted-foreground">{c.name}</span>
+                      <span className="font-mono font-medium mr-2">{c.code}</span>
+                      <span className="text-muted-foreground text-sm">{c.name}</span>
                     </SelectItem>
                   ))}
                 </SelectContent>
@@ -102,17 +117,18 @@ export function CurrencyConverterClient({ currencies }: { currencies: CurrencyRe
             </div>
           </div>
 
+          {/* Result */}
           {result !== null && (
-            <div className="flex flex-col gap-2 rounded-lg border border-border/50 bg-muted/50 p-4">
+            <div className="rounded-lg bg-muted/50 border border-border/50 p-4 flex flex-col gap-2">
               <div className="text-xs text-muted-foreground">Result</div>
               <div className="flex items-baseline gap-2">
                 <span className="text-3xl font-mono font-bold tracking-tight">
                   {formatAmount(result, toCurrency?.symbol ?? null)}
                 </span>
-                <span className="text-lg font-mono text-muted-foreground">{to}</span>
+                <span className="text-lg text-muted-foreground font-mono">{to}</span>
               </div>
               {rate !== null && (
-                <div className="mt-1 text-xs text-muted-foreground">
+                <div className="text-xs text-muted-foreground mt-1">
                   1 {from} = {rate.toFixed(6)} {to}
                 </div>
               )}
@@ -121,6 +137,7 @@ export function CurrencyConverterClient({ currencies }: { currencies: CurrencyRe
         </CardContent>
       </Card>
 
+      {/* Rate Table */}
       <Card className="border-border/50">
         <CardHeader className="pb-4">
           <div className="flex items-center gap-2">
@@ -129,22 +146,22 @@ export function CurrencyConverterClient({ currencies }: { currencies: CurrencyRe
           </div>
         </CardHeader>
         <CardContent>
-          <div className="grid grid-cols-2 gap-2 sm:grid-cols-3">
-            {currencies.map((c) => (
+          <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
+            {currencies.map(c => (
               <div
                 key={c.code}
-                className={`cursor-pointer rounded-lg border p-2.5 text-sm transition-colors ${
+                className={`flex items-center justify-between p-2.5 rounded-lg border text-sm transition-colors cursor-pointer ${
                   c.code === from || c.code === to
                     ? 'border-primary/40 bg-primary/5'
                     : 'border-border/50 hover:bg-muted/30'
-                } flex items-center justify-between`}
+                }`}
                 onClick={() => {
                   if (c.code !== from) setTo(c.code)
                 }}
               >
                 <span className="font-mono font-medium">{c.code}</span>
-                <span className="font-mono text-xs text-muted-foreground">
-                  {c.rate_to_usd != null ? c.rate_to_usd.toFixed(4) : '-'}
+                <span className="text-muted-foreground font-mono text-xs">
+                  {c.exchange_rate != null ? c.exchange_rate.toFixed(4) : '—'}
                 </span>
               </div>
             ))}

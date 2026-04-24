@@ -5,7 +5,6 @@ import { createClient } from '@/lib/supabase/server'
 import { InvoiceForm } from '@/components/invoices/invoice-form'
 import { ArrowLeft } from 'lucide-react'
 import { Button } from '@/components/ui/button'
-import type { Invoice, InvoiceItem, VendorOption } from '@/lib/types'
 
 export default async function EditIncomingInvoicePage({
   params,
@@ -43,9 +42,9 @@ export default async function EditIncomingInvoicePage({
       </div>
       <InvoiceForm
         type="INCOMING"
-        vendors={(vendors ?? []) as VendorOption[]}
-        invoice={invoice as Invoice}
-        existingItems={(invoice.items ?? []) as InvoiceItem[]}
+        vendors={vendors ?? []}
+        invoice={invoice as any}
+        existingItems={(invoice.items ?? []) as any}
       />
     </div>
   )

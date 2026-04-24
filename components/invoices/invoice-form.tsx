@@ -17,12 +17,12 @@ import { Label } from '@/components/ui/label'
 import { Separator } from '@/components/ui/separator'
 import { Plus, Trash2 } from 'lucide-react'
 import { createInvoice, updateInvoice, upsertInvoiceItems } from '@/lib/invoice-actions'
-import type { CustomerOption, Currency, Invoice, InvoiceItem, InvoiceItemFormData, InvoiceStatus, VendorOption } from '@/lib/types'
+import type { Customer, Invoice, InvoiceItem, InvoiceItemFormData, Vendor } from '@/lib/types'
 
 interface InvoiceFormProps {
   type: 'OUTGOING' | 'INCOMING'
-  customers?: CustomerOption[]
-  vendors?: VendorOption[]
+  customers?: Customer[]
+  vendors?: Vendor[]
   invoice?: Invoice
   existingItems?: InvoiceItem[]
 }
@@ -47,7 +47,7 @@ export function InvoiceForm({ type, customers = [], vendors = [], invoice, exist
   const [periodEnd, setPeriodEnd] = useState(invoice?.period_end ?? '')
   const [dueDate, setDueDate] = useState(invoice?.due_date ?? '')
   const [taxRate, setTaxRate] = useState(invoice?.tax_rate ?? 0)
-  const [currency, setCurrency] = useState<Currency>((invoice?.currency as Currency | undefined) ?? 'USD')
+  const [currency, setCurrency] = useState(invoice?.currency ?? 'USD')
   const [notes, setNotes] = useState(invoice?.notes ?? '')
   const [items, setItems] = useState<InvoiceItemFormData[]>(
     existingItems.length > 0
@@ -93,7 +93,7 @@ export function InvoiceForm({ type, customers = [], vendors = [], invoice, exist
         tax,
         total,
         currency,
-        status: (invoice?.status ?? 'DRAFT') as InvoiceStatus,
+        status: (invoice?.status ?? 'DRAFT') as any,
         notes: notes || undefined,
       }
 
@@ -133,9 +133,9 @@ export function InvoiceForm({ type, customers = [], vendors = [], invoice, exist
                 <SelectValue placeholder={`Select ${type === 'OUTGOING' ? 'customer' : 'vendor'}...`} />
               </SelectTrigger>
               <SelectContent>
-                {(type === 'OUTGOING' ? customers : vendors).map((p) => (
+                {(type === 'OUTGOING' ? customers : vendors).map((p: any) => (
                   <SelectItem key={p.id} value={p.id}>
-                    {p.name}
+                    {type === 'OUTGOING' ? p.company_name : p.name}
                   </SelectItem>
                 ))}
               </SelectContent>
@@ -144,7 +144,7 @@ export function InvoiceForm({ type, customers = [], vendors = [], invoice, exist
 
           <div className="space-y-2">
             <Label>Currency</Label>
-            <Select value={currency} onValueChange={(value) => setCurrency(value as Currency)}>
+            <Select value={currency} onValueChange={setCurrency}>
               <SelectTrigger><SelectValue /></SelectTrigger>
               <SelectContent>
                 {['USD', 'EUR', 'GBP', 'MXN', 'COP', 'BRL'].map(c => (
