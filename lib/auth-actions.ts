@@ -2,6 +2,7 @@
 
 import { createClient } from '@/lib/supabase/server'
 import { redirect } from 'next/navigation'
+import { headers } from 'next/headers'
 
 export async function signIn(formData: FormData) {
   const supabase = await createClient()
@@ -9,13 +10,28 @@ export async function signIn(formData: FormData) {
   const email = formData.get('email') as string
   const password = formData.get('password') as string
 
-  const { error } = await supabase.auth.signInWithPassword({
+  const { error, data } = await supabase.auth.signInWithPassword({
     email,
     password,
   })
 
+  const headersList = headers()
+  const ip = headersList.get('x-forwarded-for') || headersList.get('x-real-ip') || '127.0.0.1'
+  const userAgent = headersList.get('user-agent') || 'Unknown'
+
   if (error) {
+    // Optionally log failed attempts too (requires user_id resolving, omitting for simplicity)
     return { error: error.message }
+  }
+
+  if (data.user) {
+    await supabase.from('login_traces').insert({
+      username: email,
+      user_id: data.user.id,
+      ip_address: ip,
+      device: userAgent,
+      result: 'SUCCESS'
+    })
   }
 
   redirect('/dashboard')

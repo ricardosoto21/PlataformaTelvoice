@@ -228,7 +228,7 @@ export function AppSidebar({ profile }: AppSidebarProps) {
   // Determine which sections have an active route so they open by default
   const initialOpen = navSections.reduce<Record<string, boolean>>((acc, section) => {
     const hasActive = section.items.some(
-      (item) => pathname === item.url || pathname.startsWith(item.url + '/')
+      (item) => pathname === item.url || (item.url !== '/dashboard' && pathname.startsWith(item.url + '/'))
     )
     acc[section.label] = hasActive || (section.defaultOpen ?? false)
     return acc
@@ -269,7 +269,7 @@ export function AppSidebar({ profile }: AppSidebarProps) {
         {navSections.map((section) => {
           const isOpen = openSections[section.label] ?? false
           const hasActive = section.items.some(
-            (item) => pathname === item.url || pathname.startsWith(item.url + '/')
+            (item) => pathname === item.url || (item.url !== '/dashboard' && pathname.startsWith(item.url + '/'))
           )
 
           return (
@@ -294,7 +294,7 @@ export function AppSidebar({ profile }: AppSidebarProps) {
                     <SidebarMenu>
                       {section.items.map((item) => {
                         const active =
-                          pathname === item.url || pathname.startsWith(item.url + '/')
+                          pathname === item.url || (item.url !== '/dashboard' && pathname.startsWith(item.url + '/'))
                         return (
                           <SidebarMenuItem key={item.title}>
                             <SidebarMenuButton

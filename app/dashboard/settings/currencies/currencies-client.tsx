@@ -34,7 +34,7 @@ export function CurrenciesClient({ initialCurrencies }: { initialCurrencies: Cur
   }
 
   const updateRate = async (id: string, rate: string) => {
-    const parsed = parseFloat(rate)
+    const parsed = parseFloat(rate.replace(',', '.'))
     if (isNaN(parsed)) return
     await supabase.from('currencies').update({ rate_to_usd: parsed }).eq('id', id)
     setCurrencies(prev => prev.map(c => c.id === id ? { ...c, rate_to_usd: parsed } : c))
@@ -79,9 +79,8 @@ export function CurrenciesClient({ initialCurrencies }: { initialCurrencies: Cur
                 <TableCell className="font-mono text-muted-foreground">{c.symbol ?? '-'}</TableCell>
                 <TableCell>
                   <Input
-                    type="number"
-                    step="0.000001"
-                    defaultValue={c.rate_to_usd ?? 1}
+                    type="text"
+                    defaultValue={Number(c.rate_to_usd ?? 1).toString()}
                     onBlur={e => updateRate(c.id, e.target.value)}
                     className="h-8 w-32 font-mono text-sm"
                   />

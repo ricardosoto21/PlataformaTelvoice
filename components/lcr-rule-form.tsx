@@ -38,7 +38,7 @@ export function LcrRuleForm({ lcrRule, vendors, routes }: LcrRuleFormProps) {
     country: lcrRule?.country || '',
     operator: lcrRule?.operator || '',
     vendor_id: lcrRule?.vendor_id || '',
-    route_id: lcrRule?.route_id || '',
+    route_id: lcrRule?.route_id || 'none',
     priority: lcrRule?.priority || 1,
     cost: lcrRule?.cost || 0,
     active: lcrRule?.active ?? true,
@@ -52,7 +52,7 @@ export function LcrRuleForm({ lcrRule, vendors, routes }: LcrRuleFormProps) {
     try {
       const submitData = {
         ...formData,
-        route_id: formData.route_id || undefined,
+        route_id: formData.route_id === 'none' ? undefined : formData.route_id || undefined,
         cost: formData.cost || undefined,
       }
 
@@ -174,7 +174,7 @@ export function LcrRuleForm({ lcrRule, vendors, routes }: LcrRuleFormProps) {
                   <SelectValue placeholder="Select a route" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="">No route</SelectItem>
+                  <SelectItem value="none">No route</SelectItem>
                   {routes.map((route) => (
                     <SelectItem key={route.id} value={route.id}>
                       {route.name}

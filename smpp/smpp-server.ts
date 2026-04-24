@@ -100,9 +100,9 @@ export class SMPPServer {
       const { data: account, error } = await db
         .from('smpp_accounts')
         .select(`
-          id, system_id, password, status, bind_mode, max_connections,
+          id, system_id, password, active, bind_mode, max_connections,
           throughput_limit, ip_whitelist, customer_id,
-          customers ( id, name, status, balance )
+          customers ( id, name, active, balance )
         `)
         .eq('system_id', systemId)
         .eq('type', 'CUSTOMER')
@@ -110,33 +110,33 @@ export class SMPPServer {
 
       if (error || !account) {
         console.warn(`[smpp-server] Unknown system_id: ${systemId}`)
-        session.send({ command: bindRespCmd, command_status: smpp.ESME_RINVSYSID, sequence_number: pdu.sequence_number } as smpp.PDU)
-        session.close()
+        session.send(pdu.response({ command_status: smpp.ESME_RINVSYSID }))
+        setTimeout(() => session.close(), 50)
         return
       }
 
       // 2. Check password (supports both AES-GCM encrypted and legacy plaintext)
       if (!verifyPassword(password, account.password)) {
         console.warn(`[smpp-server] Invalid password for: ${systemId}`)
-        session.send({ command: bindRespCmd, command_status: smpp.ESME_RINVPASWD, sequence_number: pdu.sequence_number } as smpp.PDU)
-        session.close()
+        session.send(pdu.response({ command_status: smpp.ESME_RINVPASWD }))
+        setTimeout(() => session.close(), 50)
         return
       }
 
       // 3. Check account status
-      if (account.status !== 'ACTIVE') {
+      if (!account.active) {
         console.warn(`[smpp-server] Account inactive: ${systemId}`)
-        session.send({ command: bindRespCmd, command_status: smpp.ESME_RBINDFAIL, sequence_number: pdu.sequence_number } as smpp.PDU)
-        session.close()
+        session.send(pdu.response({ command_status: smpp.ESME_RBINDFAIL }))
+        setTimeout(() => session.close(), 50)
         return
       }
 
       // 4. Check customer status
-      const customer = account.customers as { status: string; balance: number } | null
-      if (!customer || customer.status !== 'ACTIVE') {
+      const customer = account.customers as { active: boolean; balance: number } | null
+      if (!customer || !customer.active) {
         console.warn(`[smpp-server] Customer inactive for: ${systemId}`)
-        session.send({ command: bindRespCmd, command_status: smpp.ESME_RBINDFAIL, sequence_number: pdu.sequence_number } as smpp.PDU)
-        session.close()
+        session.send(pdu.response({ command_status: smpp.ESME_RBINDFAIL }))
+        setTimeout(() => session.close(), 50)
         return
       }
 
@@ -144,8 +144,8 @@ export class SMPPServer {
       if (account.ip_whitelist && Array.isArray(account.ip_whitelist) && account.ip_whitelist.length > 0) {
         if (!account.ip_whitelist.includes(remoteAddress)) {
           console.warn(`[smpp-server] IP not whitelisted: ${remoteAddress} for ${systemId}`)
-          session.send({ command: bindRespCmd, command_status: smpp.ESME_RBINDFAIL, sequence_number: pdu.sequence_number } as smpp.PDU)
-          session.close()
+          session.send(pdu.response({ command_status: smpp.ESME_RBINDFAIL }))
+          setTimeout(() => session.close(), 50)
           return
         }
       }
@@ -154,8 +154,8 @@ export class SMPPServer {
       const currentConnections = sessionManager.countClientsBySystemId(systemId)
       if (account.max_connections && currentConnections >= account.max_connections) {
         console.warn(`[smpp-server] Max connections reached for: ${systemId}`)
-        session.send({ command: bindRespCmd, command_status: smpp.ESME_RBINDFAIL, sequence_number: pdu.sequence_number } as smpp.PDU)
-        session.close()
+        session.send(pdu.response({ command_status: smpp.ESME_RBINDFAIL }))
+        setTimeout(() => session.close(), 50)
         return
       }
 
@@ -176,12 +176,10 @@ export class SMPPServer {
         lastActivity: new Date(),
       })
 
-      session.send({
-        command: bindRespCmd,
+      session.send(pdu.response({
         command_status: smpp.ESME_ROK,
-        sequence_number: pdu.sequence_number,
         system_id: systemId,
-      } as smpp.PDU)
+      }))
 
       console.log(`[smpp-server] ${systemId} bound as ${bindMode} from ${remoteAddress}:${remotePort}`)
 
@@ -190,8 +188,8 @@ export class SMPPServer {
 
     } catch (err) {
       console.error(`[smpp-server] Error during bind for ${systemId}:`, err)
-      session.send({ command: bindRespCmd, command_status: smpp.ESME_RBINDFAIL, sequence_number: pdu.sequence_number } as smpp.PDU)
-      session.close()
+      session.send(pdu.response({ command_status: smpp.ESME_RBINDFAIL }))
+      setTimeout(() => session.close(), 50)
     }
   }
 
@@ -206,32 +204,26 @@ export class SMPPServer {
       sessionManager.incrementClientMsgSent(sessionId)
 
       // Acknowledge receipt immediately
-      session.send({
-        command: 'submit_sm_resp',
+      session.send(pdu.response({
         command_status: smpp.ESME_ROK,
-        sequence_number: pdu.sequence_number,
         message_id: uuidv4(),
-      } as smpp.PDU)
+      }))
 
       // Process asynchronously via queue
       await processor.enqueueOutbound(pdu, customerId, sessionId)
     })
 
     session.on('enquire_link', (pdu) => {
-      session.send({
-        command: 'enquire_link_resp',
+      session.send(pdu.response({
         command_status: smpp.ESME_ROK,
-        sequence_number: pdu.sequence_number,
-      } as smpp.PDU)
+      }))
     })
 
     session.on('unbind', (pdu) => {
-      session.send({
-        command: 'unbind_resp',
+      session.send(pdu.response({
         command_status: smpp.ESME_ROK,
-        sequence_number: pdu.sequence_number,
-      } as smpp.PDU)
-      session.close()
+      }))
+      setTimeout(() => session.close(), 50)
     })
   }
 }

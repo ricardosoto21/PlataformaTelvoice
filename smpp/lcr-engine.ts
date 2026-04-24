@@ -54,86 +54,46 @@ export class LCREngine {
     )
     if (loadResult) return loadResult
 
-    // 2. Standard LCR: find cheapest route via routes + rate_plans
-    const { data: routes } = await db
-      .from('routes')
+    // 2. Standard LCR: query lcr_rules — exact MCC/MNC OR wildcard 000/000
+    //    Push the filter to DB rather than filtering in JS to avoid type issues
+    const { data: rules, error: rulesError } = await db
+      .from('lcr_rules')
       .select(`
-        id, vendor_id, priority, quality_score,
-        rate_plans!inner (
-          id,
-          rate_plan_rates (
-            rate,
-            mcc,
-            mnc
-          )
-        ),
-        vendors!inner ( id, name, status )
+        id, mcc, mnc, vendor_id, route_id, priority, cost,
+        vendors ( id, name )
       `)
-      .in('vendor_id', availableVendorIds)
-      .eq('vendors.status', 'ACTIVE')
       .eq('active', true)
+      .in('vendor_id', availableVendorIds)
+      .or(`and(mcc.eq.${params.mcc},mnc.eq.${params.mnc}),and(mcc.eq.000,mnc.eq.000)`)
+      .order('priority', { ascending: true })
 
-    if (!routes || routes.length === 0) {
-      console.warn('[lcr] No routes found for available vendors')
+    console.log(`[lcr] Rules query for MCC=${params.mcc} MNC=${params.mnc}, availableVendors=${availableVendorIds.length}, results=${rules?.length ?? 0}, error=${rulesError?.message ?? 'none'}`)
+
+    if (!rules || rules.length === 0) {
+      console.warn(`[lcr] No LCR rules found for MCC ${params.mcc} MNC ${params.mnc}`)
       return null
     }
 
-    // Find matching rate for MCC/MNC
-    type RouteCandidate = {
-      vendorId: string
-      vendorName: string
-      vendorRate: number
-      routeId: string
-      priority: number
-      qualityScore: number
-    }
-    const candidates: RouteCandidate[] = []
+    // Prefer exact MCC+MNC match over wildcard
+    const exactMatches = rules.filter(r => r.mcc === params.mcc && r.mnc === params.mnc)
+    const best = exactMatches.length > 0 ? exactMatches[0] : rules[0]
 
-    for (const route of routes) {
-      const ratePlan = route.rate_plans as { id: string; rate_plan_rates: { rate: number; mcc: string; mnc: string }[] } | null
-      if (!ratePlan) continue
-
-      // Find exact MCC+MNC match first, then MCC-only (wildcard MNC)
-      const rates = ratePlan.rate_plan_rates ?? []
-      const exactRate = rates.find(r => r.mcc === params.mcc && r.mnc === params.mnc)
-      const wildcardRate = rates.find(r => r.mcc === params.mcc && (!r.mnc || r.mnc === ''))
-      const matchedRate = exactRate ?? wildcardRate
-
-      if (!matchedRate) continue
-
-      const vendor = route.vendors as { id: string; name: string } | null
-      if (!vendor) continue
-
-      candidates.push({
-        vendorId: vendor.id,
-        vendorName: vendor.name,
-        vendorRate: matchedRate.rate,
-        routeId: route.id,
-        priority: route.priority ?? 0,
-        qualityScore: route.quality_score ?? 100,
-      })
-    }
-
-    if (candidates.length === 0) {
-      console.warn(`[lcr] No rate found for MCC ${params.mcc} MNC ${params.mnc}`)
+    const vendor = best.vendors as { id: string; name: string } | null
+    if (!vendor) {
+      console.warn(`[lcr] Rule ${best.id} has no vendor data`)
       return null
     }
 
-    // Sort: lowest cost first, then highest quality, then priority
-    candidates.sort((a, b) => {
-      if (a.vendorRate !== b.vendorRate) return a.vendorRate - b.vendorRate
-      if (a.qualityScore !== b.qualityScore) return b.qualityScore - a.qualityScore
-      return b.priority - a.priority
-    })
+    console.log(`[lcr] Routing MCC ${params.mcc} MNC ${params.mnc} → vendor: ${vendor.name} (rule: ${best.mcc}/${best.mnc})`)
 
-    const best = candidates[0]
     return {
-      vendorId: best.vendorId,
-      vendorName: best.vendorName,
-      vendorRate: best.vendorRate,
-      routeId: best.routeId,
+      vendorId: vendor.id,
+      vendorName: vendor.name,
+      vendorRate: best.cost ?? 0,
+      routeId: best.route_id ?? '',
     }
   }
+
 
   /**
    * Check load distribution rules.

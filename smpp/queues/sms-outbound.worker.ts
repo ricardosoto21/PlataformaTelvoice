@@ -32,8 +32,8 @@ export function startOutboundWorker(): Worker<SMPPOutboundJob> | null {
       // 1. Detect MCC/MNC from destination (lookup table)
       // ------------------------------------------------
       const destination = await resolveMccMnc(data.destAddr)
-      const mcc = destination?.mcc ?? ''
-      const mnc = destination?.mnc ?? ''
+      const mcc = destination?.mcc ?? '000'
+      const mnc = destination?.mnc ?? '000'
       const country = destination?.country ?? ''
       const operator = destination?.operator ?? ''
 
@@ -175,7 +175,7 @@ async function resolveMccMnc(destAddr: string): Promise<{
 
   const db = getEngineDb()
 
-  // Try MCC+MNC prefixes (3+2 or 3+3 digit)
+  // Try progressively shorter prefixes: 3+3, 3+2 digit MCC+MNC combos
   for (const mncLen of [3, 2]) {
     const mcc = digits.slice(0, 3)
     const mnc = digits.slice(3, 3 + mncLen)
@@ -189,6 +189,23 @@ async function resolveMccMnc(destAddr: string): Promise<{
 
     if (data) return data
   }
+
+  // Try stripping 1-digit country code prefix and re-lookup (e.g. +56 9 XXXXXXXX → try from digit 2)
+  for (const skip of [1, 2]) {
+    const trimmed = digits.slice(skip)
+    for (const mncLen of [3, 2]) {
+      const mcc = trimmed.slice(0, 3)
+      const mnc = trimmed.slice(3, 3 + mncLen)
+      const { data } = await db
+        .from('mcc_mnc')
+        .select('mcc, mnc, country, operator')
+        .eq('mcc', mcc)
+        .eq('mnc', mnc)
+        .single()
+      if (data) return data
+    }
+  }
+
   return null
 }
 

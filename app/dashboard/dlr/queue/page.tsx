@@ -30,7 +30,7 @@ export default async function DlrQueuePage() {
     <div className="flex flex-col gap-6">
       <div>
         <h1 className="text-2xl font-semibold tracking-tight">DLR Queue</h1>
-        <p className="text-muted-foreground">Delivery receipt delivery queue status</p>
+        <p className="text-muted-foreground">Delivery receipt queue status</p>
       </div>
 
       <div className="grid grid-cols-2 gap-4 sm:grid-cols-4">

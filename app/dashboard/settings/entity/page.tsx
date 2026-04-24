@@ -8,6 +8,7 @@ import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Separator } from '@/components/ui/separator'
 import { Badge } from '@/components/ui/badge'
+import { Skeleton } from '@/components/ui/skeleton'
 import { Building2, CreditCard, MapPin, Loader2, Save, CheckCircle } from 'lucide-react'
 
 type EntitySettings = {
@@ -77,8 +78,19 @@ export default function EntitySettingsPage() {
   }
 
   if (loading) return (
-    <div className="flex items-center justify-center h-64">
-      <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
+    <div className="flex flex-col gap-6">
+      <div className="flex items-center justify-between">
+        <div>
+          <h1 className="text-2xl font-semibold tracking-tight">Entity Settings</h1>
+          <p className="text-muted-foreground">Company legal information and banking details</p>
+        </div>
+        <Skeleton className="h-9 w-32" />
+      </div>
+      <div className="grid gap-6 lg:grid-cols-2">
+        <Skeleton className="h-[400px] rounded-xl" />
+        <Skeleton className="h-[400px] rounded-xl" />
+        <Skeleton className="h-[200px] lg:col-span-2 rounded-xl" />
+      </div>
     </div>
   )
 

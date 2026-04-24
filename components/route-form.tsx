@@ -38,7 +38,7 @@ export function RouteForm({ route, ratePlans }: RouteFormProps) {
     name: route?.name || '',
     type: route?.type || 'RETAIL' as RouteType,
     description: route?.description || '',
-    rate_plan_id: route?.rate_plan_id || '',
+    rate_plan_id: route?.rate_plan_id || 'none',
     active: route?.active ?? true,
   })
 
@@ -50,7 +50,7 @@ export function RouteForm({ route, ratePlans }: RouteFormProps) {
     try {
       const submitData = {
         ...formData,
-        rate_plan_id: formData.rate_plan_id || undefined,
+        rate_plan_id: formData.rate_plan_id === 'none' ? undefined : formData.rate_plan_id || undefined,
       }
       
       if (route) {
@@ -125,7 +125,7 @@ export function RouteForm({ route, ratePlans }: RouteFormProps) {
                   <SelectValue placeholder="Select a rate plan" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="">No rate plan</SelectItem>
+                  <SelectItem value="none">No rate plan</SelectItem>
                   {ratePlans.map((plan) => (
                     <SelectItem key={plan.id} value={plan.id}>
                       {plan.name} ({plan.currency})

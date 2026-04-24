@@ -130,14 +130,14 @@ export default function VoiceRatePlansPage() {
               <TabsTrigger key={p.id} value={p.id} className="text-xs">{p.name}</TabsTrigger>
             ))}
           </TabsList>
-          {selectedPlan && (
+          {selectedPlan ? (
             <div className="flex items-center gap-3">
-              {selectedPlanData && (
+              {selectedPlanData ? (
                 <div className="flex items-center gap-2 text-sm text-muted-foreground">
                   <span>{selectedPlanData.billing_increment}s/{selectedPlanData.min_duration}s</span>
                   <Switch checked={selectedPlanData.active} onCheckedChange={(v) => togglePlan(selectedPlanData.id, v)} />
                 </div>
-              )}
+              ) : null}
               <Dialog open={openRate} onOpenChange={setOpenRate}>
                 <DialogTrigger asChild>
                   <Button size="sm"><Plus className="mr-2 h-3.5 w-3.5" />Add Rate</Button>
@@ -168,7 +168,7 @@ export default function VoiceRatePlansPage() {
                 </DialogContent>
               </Dialog>
             </div>
-          )}
+          ) : null}
         </div>
 
         {plans.map((p) => (
@@ -176,7 +176,7 @@ export default function VoiceRatePlansPage() {
             <Card className="border-border/50">
               <CardHeader className="pb-4">
                 <CardTitle className="text-base">{p.name}</CardTitle>
-                <CardDescription>{rates.length} destinations · {p.currency} · {p.billing_increment}s billing</CardDescription>
+                <CardDescription>{rates.length} destinations - {p.currency} - {p.billing_increment}s billing</CardDescription>
               </CardHeader>
               <CardContent className="p-0">
                 <Table>
@@ -214,13 +214,13 @@ export default function VoiceRatePlansPage() {
           </TabsContent>
         ))}
 
-        {!plans.length && (
+        {plans.length === 0 ? (
           <Card className="border-border/50 mt-4">
             <CardContent className="h-32 flex items-center justify-center text-muted-foreground">
               No voice rate plans yet
             </CardContent>
           </Card>
-        )}
+        ) : null}
       </Tabs>
     </div>
   )

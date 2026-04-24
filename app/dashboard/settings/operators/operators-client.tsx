@@ -60,7 +60,7 @@ export function OperatorsClient({ initialOperators }: { initialOperators: Operat
               {filtered.length === 0 && (
                 <TableRow>
                   <TableCell colSpan={5} className="text-center text-muted-foreground py-16">
-                    No operators found
+                    {search ? `No results for "${search}"` : "Type to search operators"}
                   </TableCell>
                 </TableRow>
               )}

@@ -116,6 +116,16 @@ export function SmppAccountForm({
   return (
     <form onSubmit={handleSubmit}>
       <div className="flex flex-col gap-6">
+        <Card className="border-blue-500/20 bg-blue-500/5">
+          <CardContent className="p-4 flex gap-3 items-center text-sm text-blue-600 dark:text-blue-400">
+            <Server className="h-4 w-4 shrink-0" />
+            <p>
+              <strong>Customer Account:</strong> This section is for managing SMPP credentials for customers who connect <em>to</em> our platform. 
+              To configure connections <em>to</em> external SMPP providers, use the <strong>Vendors</strong> section.
+            </p>
+          </CardContent>
+        </Card>
+
         {error && (
           <div className="rounded-md bg-destructive/10 p-3 text-sm text-destructive">
             {error}

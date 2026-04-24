@@ -7,20 +7,16 @@ const supabase = createClient(url, key)
 
 async function check() {
   const { data, error } = await supabase
-    .from('smpp_accounts')
-    .select('system_id, password, active')
-    .eq('system_id', 'Telvoice')
-    .single()
+    .from('lcr_rules')
+    .select('id, mcc, mnc, vendor_id, route_id, priority, cost, active')
 
   if (error) {
-    console.error("Error fetching from DB:", error.message)
+    console.error('Error:', error.message)
     return
   }
+  console.log('\n--- LCR Rules in DB ---')
+  console.table(data)
 
-  console.log("Account Details in DB:")
-  console.log("System ID:", data.system_id)
-  console.log("Password in DB:", data.password)
-  console.log("Is Active:", data.active)
 }
 
 check()
