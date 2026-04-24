@@ -14,14 +14,9 @@ import {
 import { Badge } from '@/components/ui/badge'
 import { Progress } from '@/components/ui/progress'
 import { DeleteLoadDistributionButton } from './delete-load-distribution-button'
-import type { LoadDistribution } from '@/lib/types'
 
 export default async function LoadDistributionPage() {
   const distributions = await getLoadDistributions()
-  type GroupedDistribution = {
-    customer: LoadDistribution['customer']
-    distributions: LoadDistribution[]
-  }
 
   // Group by customer for display
   const groupedByCustomer = distributions.reduce((acc, dist) => {
@@ -34,9 +29,9 @@ export default async function LoadDistributionPage() {
     }
     acc[customerId].distributions.push(dist)
     return acc
-  }, {} as Record<string, GroupedDistribution>)
+  }, {} as Record<string, { customer: any; distributions: any[] }>)
 
-  const getConnectionBadge = (status?: string | null) => {
+  const getConnectionBadge = (status: string) => {
     switch (status) {
       case 'CONNECTED':
         return <Badge className="bg-green-500/10 text-green-500 border-green-500/20">Online</Badge>
@@ -84,15 +79,15 @@ export default async function LoadDistributionPage() {
         </Card>
       ) : (
         <div className="space-y-6">
-          {(Object.entries(groupedByCustomer) as [string, GroupedDistribution][]).map(([customerId, group]) => (
+          {Object.entries(groupedByCustomer).map(([customerId, { customer, distributions }]) => (
             <Card key={customerId}>
               <CardHeader>
                 <CardTitle className="flex items-center gap-2">
-                  <span>{group.customer?.name}</span>
-                  <Badge variant="outline">{group.customer?.ref_number}</Badge>
+                  <span>{customer?.name}</span>
+                  <Badge variant="outline">{customer?.ref_number}</Badge>
                 </CardTitle>
                 <CardDescription>
-                  {group.distributions.length} distribution rule{group.distributions.length !== 1 ? 's' : ''}
+                  {distributions.length} distribution rule{distributions.length !== 1 ? 's' : ''}
                 </CardDescription>
               </CardHeader>
               <CardContent>
@@ -108,7 +103,7 @@ export default async function LoadDistributionPage() {
                     </TableRow>
                   </TableHeader>
                   <TableBody>
-                    {group.distributions.map((dist: LoadDistribution) => (
+                    {distributions.map((dist) => (
                       <TableRow key={dist.id}>
                         <TableCell className="font-mono">
                           {dist.mcc}/{dist.mnc}

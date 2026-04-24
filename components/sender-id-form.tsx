@@ -12,11 +12,11 @@ import {
 } from '@/components/ui/select'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { createSenderId, updateSenderId } from '@/lib/sender-id-actions'
-import type { SenderIdRecord, CustomerOption, SenderIdFormData, ScopeType, SenderIdType, SenderIdStatus } from '@/lib/types'
+import type { SenderIdRecord, Customer, SenderIdFormData, ScopeType, SenderIdType, SenderIdStatus } from '@/lib/types'
 
 interface SenderIdFormProps {
   senderIdRecord?: SenderIdRecord
-  customers: CustomerOption[]
+  customers: Customer[]
 }
 
 export default function SenderIdForm({ senderIdRecord, customers }: SenderIdFormProps) {

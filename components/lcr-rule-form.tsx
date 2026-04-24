@@ -167,14 +167,14 @@ export function LcrRuleForm({ lcrRule, vendors, routes }: LcrRuleFormProps) {
             <Field>
               <FieldLabel htmlFor="route_id">Route (Optional)</FieldLabel>
               <Select
-                value={formData.route_id || "none"}
-                onValueChange={(value) => setFormData({ ...formData, route_id: value === "none" ? "" : value })}
+                value={formData.route_id}
+                onValueChange={(value) => setFormData({ ...formData, route_id: value })}
               >
                 <SelectTrigger id="route_id">
                   <SelectValue placeholder="Select a route" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="none">No route</SelectItem>
+                  <SelectItem value="">No route</SelectItem>
                   {routes.map((route) => (
                     <SelectItem key={route.id} value={route.id}>
                       {route.name}

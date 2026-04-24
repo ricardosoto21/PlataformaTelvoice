@@ -1,11 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { authorizeRequest } from '@/lib/api-auth'
+import { createClient } from '@/lib/supabase/server'
 
 export async function GET(req: NextRequest) {
-  const auth = await authorizeRequest(['ADMIN', 'MANAGER'])
-  if (!auth.ok) return auth.response
-
-  const { supabase } = auth.data
+  const supabase = await createClient()
   const number = req.nextUrl.searchParams.get('number') ?? ''
   const digits = number.replace(/\D/g, '')
 
@@ -55,19 +52,11 @@ export async function GET(req: NextRequest) {
     cost: number
     qualityScore: number
   }
-  type VendorRow = { id: string; name: string; status: string }
-  type RatePlanRateRow = { rate: number; mcc: string; mnc: string | null }
-  type RatePlanRow = { id: string; name: string; rate_plan_rates: RatePlanRateRow[] }
   const candidates: Candidate[] = []
 
   for (const route of routes ?? []) {
-    const vendor = Array.isArray(route.vendors)
-      ? (route.vendors[0] as VendorRow | undefined)
-      : (route.vendors as VendorRow | null)
-    const ratePlan = Array.isArray(route.rate_plans)
-      ? (route.rate_plans[0] as RatePlanRow | undefined)
-      : (route.rate_plans as RatePlanRow | null)
-
+    const vendor = route.vendors as { id: string; name: string; status: string } | null
+    const ratePlan = route.rate_plans as { id: string; name: string; rate_plan_rates: { rate: number; mcc: string; mnc: string }[] } | null
     if (!vendor || !ratePlan) continue
 
     const rates = ratePlan.rate_plan_rates ?? []

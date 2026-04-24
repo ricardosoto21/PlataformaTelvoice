@@ -2,7 +2,6 @@ import Link from 'next/link'
 import { Plus, Search, MoreHorizontal, Pencil, Trash2, Wifi, WifiOff } from 'lucide-react'
 import { getVendors } from '@/lib/vendor-actions'
 import { Button } from '@/components/ui/button'
-import { ConnectVendorButton } from './connect-vendor-button'
 import { Input } from '@/components/ui/input'
 import { Badge } from '@/components/ui/badge'
 import {
@@ -163,7 +162,6 @@ export default async function VendorsPage() {
                             </Link>
                           </DropdownMenuItem>
                           <DropdownMenuSeparator />
-                          <ConnectVendorButton id={vendor.id} status={vendor.connection_status} />
                           <DeleteVendorButton id={vendor.id} name={vendor.name} />
                         </DropdownMenuContent>
                       </DropdownMenu>

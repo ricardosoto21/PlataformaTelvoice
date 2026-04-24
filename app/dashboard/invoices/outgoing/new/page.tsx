@@ -3,15 +3,14 @@ import { InvoiceForm } from '@/components/invoices/invoice-form'
 import { ArrowLeft } from 'lucide-react'
 import Link from 'next/link'
 import { Button } from '@/components/ui/button'
-import type { CustomerOption } from '@/lib/types'
 
 export default async function NewOutgoingInvoicePage() {
   const supabase = await createClient()
   const { data: customers } = await supabase
     .from('customers')
-    .select('id, name, ref_number')
+    .select('id, company_name')
     .eq('active', true)
-    .order('name')
+    .order('company_name')
 
   return (
     <div className="space-y-6">
@@ -26,7 +25,7 @@ export default async function NewOutgoingInvoicePage() {
           <p className="text-sm text-muted-foreground">Create an invoice to bill a customer.</p>
         </div>
       </div>
-      <InvoiceForm type="OUTGOING" customers={(customers ?? []) as CustomerOption[]} />
+      <InvoiceForm type="OUTGOING" customers={customers ?? []} />
     </div>
   )
 }

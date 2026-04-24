@@ -3,7 +3,6 @@ import { InvoiceForm } from '@/components/invoices/invoice-form'
 import { ArrowLeft } from 'lucide-react'
 import Link from 'next/link'
 import { Button } from '@/components/ui/button'
-import type { VendorOption } from '@/lib/types'
 
 export default async function NewIncomingInvoicePage() {
   const supabase = await createClient()
@@ -26,7 +25,7 @@ export default async function NewIncomingInvoicePage() {
           <p className="text-sm text-muted-foreground">Register an invoice received from a vendor.</p>
         </div>
       </div>
-      <InvoiceForm type="INCOMING" vendors={(vendors ?? []) as VendorOption[]} />
+      <InvoiceForm type="INCOMING" vendors={vendors ?? []} />
     </div>
   )
 }
