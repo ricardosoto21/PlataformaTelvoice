@@ -84,6 +84,7 @@ export function CurrenciesClient({ initialCurrencies }: { initialCurrencies: Cur
                     defaultValue={c.rate_to_usd ?? 1}
                     onBlur={e => updateRate(c.id, e.target.value)}
                     className="h-8 w-32 font-mono text-sm"
+                    pattern="[0-9]*\.?[0-9]*"
                   />
                 </TableCell>
                 <TableCell>

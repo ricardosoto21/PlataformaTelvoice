@@ -65,7 +65,7 @@ export default function MccMncFinderPage() {
               {!filtered.length ? (
                 <TableRow>
                   <TableCell colSpan={4} className="h-32 text-center text-muted-foreground">
-                    No results for &quot;{search}&quot;
+                    {search ? `No results for "${search}"` : 'Type to search networks'}
                   </TableCell>
                 </TableRow>
               ) : (

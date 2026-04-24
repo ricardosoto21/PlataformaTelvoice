@@ -73,10 +73,10 @@ export default function SMPPSessionsPage() {
         <div>
           <h1 className="text-2xl font-bold tracking-tight">Live Sessions</h1>
           <p className="text-sm text-muted-foreground">
-            Sesiones SMPP activas — actualiza cada 3 segundos
+            Active SMPP sessions — updates every 3 seconds
             {lastUpdated && (
               <span className="ml-2 text-xs">
-                (ultimo update: {formatDistanceToNow(lastUpdated, { addSuffix: true })})
+                (last updated: {formatDistanceToNow(lastUpdated, { addSuffix: true })})
               </span>
             )}
           </p>
@@ -123,12 +123,12 @@ export default function SMPPSessionsPage() {
             <Users className="h-4 w-4" />
             Client Sessions (Inbound)
           </CardTitle>
-          <CardDescription>Clientes que han hecho bind al servidor SMPP</CardDescription>
+          <CardDescription>Clients that have bound to the SMPP server</CardDescription>
         </CardHeader>
         <CardContent>
           {clients.length === 0 ? (
             <p className="text-sm text-muted-foreground text-center py-8">
-              No hay sesiones de clientes activas
+              No active client sessions
             </p>
           ) : (
             <Table>
@@ -181,12 +181,12 @@ export default function SMPPSessionsPage() {
             <Server className="h-4 w-4" />
             Vendor Sessions (Outbound)
           </CardTitle>
-          <CardDescription>Conexiones salientes a vendors SMPP</CardDescription>
+          <CardDescription>Outbound connections to SMPP vendors</CardDescription>
         </CardHeader>
         <CardContent>
           {vendors.length === 0 ? (
             <p className="text-sm text-muted-foreground text-center py-8">
-              No hay vendors registrados
+              No vendors registered
             </p>
           ) : (
             <Table>

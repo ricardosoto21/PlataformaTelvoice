@@ -130,7 +130,6 @@ export default function VoiceRatePlansPage() {
               <TabsTrigger key={p.id} value={p.id} className="text-xs">{p.name}</TabsTrigger>
             ))}
           </TabsList>
-          {selectedPlan && (
             <div className="flex items-center gap-3">
               {selectedPlanData && (
                 <div className="flex items-center gap-2 text-sm text-muted-foreground">

@@ -146,7 +146,7 @@ export default function SMPPEnginePage() {
         <div>
           <h1 className="text-2xl font-bold tracking-tight">SMPP Engine</h1>
           <p className="text-sm text-muted-foreground">
-            Motor de procesamiento de mensajes SMS — puerto TCP {engine?.port ?? 2775}
+            SMS message processing engine — TCP port {engine?.port ?? 2775}
           </p>
         </div>
         <div className="flex items-center gap-2">
@@ -282,12 +282,12 @@ export default function SMPPEnginePage() {
       <Card>
         <CardHeader>
           <CardTitle className="text-base">Vendor Connections</CardTitle>
-          <CardDescription>Estado de las conexiones SMPP a vendors</CardDescription>
+          <CardDescription>SMPP vendor connection status</CardDescription>
         </CardHeader>
         <CardContent>
           {!data?.vendors.length ? (
             <p className="text-sm text-muted-foreground text-center py-6">
-              No hay vendors configurados. Configura una cuenta SMPP en el módulo de Vendors.
+              No vendors configured. Set up an SMPP account in the Vendors module.
             </p>
           ) : (
             <Table>
@@ -359,12 +359,12 @@ export default function SMPPEnginePage() {
       <Card>
         <CardHeader>
           <CardTitle className="text-base">Active Client Sessions</CardTitle>
-          <CardDescription>Clientes SMPP actualmente conectados</CardDescription>
+          <CardDescription>Currently connected SMPP clients</CardDescription>
         </CardHeader>
         <CardContent>
           {!data?.clients.length ? (
             <p className="text-sm text-muted-foreground text-center py-6">
-              No hay sesiones activas. Los clientes deben hacer bind al puerto {engine?.port ?? 2775}.
+              No active sessions. Clients must bind to port {engine?.port ?? 2775}.
             </p>
           ) : (
             <Table>
@@ -412,9 +412,9 @@ export default function SMPPEnginePage() {
             <div className="flex gap-3">
               <AlertCircle className="h-5 w-5 text-yellow-500 mt-0.5 shrink-0" />
               <div className="space-y-2">
-                <p className="font-medium text-sm">Configuracion requerida</p>
+                <p className="font-medium text-sm">Production configuration required</p>
                 <p className="text-sm text-muted-foreground">
-                  Para usar el motor SMPP en produccion, asegurate de configurar las siguientes variables de entorno:
+                  To run the SMPP engine in production, ensure the following environment variables are set:
                 </p>
                 <ul className="text-xs font-mono text-muted-foreground space-y-1 mt-2">
                   <li><span className="text-foreground">SMPP_PORT</span>=2775 (puerto TCP del servidor)</li>
@@ -422,8 +422,8 @@ export default function SMPPEnginePage() {
                   <li><span className="text-foreground">REDIS_URL</span>=redis://... (Upstash o Redis propio)</li>
                 </ul>
                 <p className="text-xs text-muted-foreground mt-2">
-                  El motor requiere un servidor propio (VPS/Docker) ya que usa un socket TCP persistente
-                  que no es compatible con entornos serverless.
+                  The SMPP engine requires a dedicated server (VPS/Docker) since it uses a persistent TCP socket
+                  that is not compatible with serverless environments.
                 </p>
               </div>
             </div>
