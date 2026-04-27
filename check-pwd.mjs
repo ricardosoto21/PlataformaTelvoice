@@ -1,8 +1,7 @@
 import { createClient } from '@supabase/supabase-js'
 
-const url = "https://dcqklwovpwlaweimyvqg.supabase.co"
-const key = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImRjcWtsd292cHdsYXdlaW15dnFnIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc3NjMwMDU4NSwiZXhwIjoyMDkxODc2NTg1fQ.I5s3uStyW5AMj4nS6LmP-EhH65Lpf8qp0Ea12SSat30"
-
+const url = 
+const key = 
 const supabase = createClient(url, key)
 
 async function check() {
