@@ -21,9 +21,9 @@ export default async function EditOutgoingInvoicePage({
 
   const { data: customers } = await supabase
     .from('customers')
-    .select('id, company_name')
+    .select('id, name, ref_number')
     .eq('active', true)
-    .order('company_name')
+    .order('name')
 
   return (
     <div className="space-y-6">

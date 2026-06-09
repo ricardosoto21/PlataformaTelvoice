@@ -31,6 +31,8 @@ export interface VendorSession {
   port: number
   systemId: string
   bindMode: BindMode
+  ton: number
+  npi: number
   session: Session | null
   connectedAt: Date | null
   reconnecting: boolean
@@ -183,6 +185,8 @@ export class SessionManager {
       port: v.port,
       systemId: v.systemId,
       bindMode: v.bindMode,
+      ton: v.ton,
+      npi: v.npi,
       status: v.status,
       connectedAt: v.connectedAt?.toISOString() ?? null,
       msgSent: v.msgSent,

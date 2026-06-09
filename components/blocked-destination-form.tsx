@@ -12,12 +12,12 @@ import {
 } from '@/components/ui/select'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { createBlockedDestination, updateBlockedDestination } from '@/lib/blocked-destination-actions'
-import type { BlockedDestination, Customer, Vendor, BlockedDestinationFormData, BlockedDestinationScope } from '@/lib/types'
+import type { BlockedDestination, CustomerOption, VendorOption, BlockedDestinationFormData, BlockedDestinationScope } from '@/lib/types'
 
 interface BlockedDestinationFormProps {
   destination?: BlockedDestination
-  customers: Customer[]
-  vendors: Vendor[]
+  customers: CustomerOption[]
+  vendors: VendorOption[]
 }
 
 export default function BlockedDestinationForm({ destination, customers, vendors }: BlockedDestinationFormProps) {

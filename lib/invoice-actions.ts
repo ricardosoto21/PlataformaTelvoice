@@ -14,7 +14,7 @@ export async function getInvoices(type?: 'OUTGOING' | 'INCOMING', filters?: {
     .from('invoices')
     .select(`
       *,
-      customer:customers(id, company_name),
+      customer:customers(id, name, ref_number),
       vendor:vendors(id, name)
     `)
     .order('created_at', { ascending: false })
@@ -35,8 +35,8 @@ export async function getInvoiceById(id: string) {
     .from('invoices')
     .select(`
       *,
-      customer:customers(id, company_name, email, address, country),
-      vendor:vendors(id, name, email, address, country),
+      customer:customers(id, name, ref_number, email),
+      vendor:vendors(id, name, email),
       items:invoice_items(*)
     `)
     .eq('id', id)

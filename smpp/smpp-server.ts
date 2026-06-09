@@ -108,7 +108,14 @@ export class SMPPServer {
         .eq('type', 'CUSTOMER')
         .single()
 
-      if (error || !account) {
+      if (error && error.code !== 'PGRST116') {
+        console.error(`[smpp-server] Failed to look up system_id ${systemId}:`, error.message)
+        session.send(pdu.response({ command_status: smpp.ESME_RSYSERR }))
+        setTimeout(() => session.close(), 50)
+        return
+      }
+
+      if (!account) {
         console.warn(`[smpp-server] Unknown system_id: ${systemId}`)
         session.send(pdu.response({ command_status: smpp.ESME_RINVSYSID }))
         setTimeout(() => session.close(), 50)
@@ -132,7 +139,8 @@ export class SMPPServer {
       }
 
       // 4. Check customer status
-      const customer = account.customers as { active: boolean; balance: number } | null
+      const customerRecord = Array.isArray(account.customers) ? account.customers[0] : account.customers
+      const customer = customerRecord as { active: boolean; balance: number } | null
       if (!customer || !customer.active) {
         console.warn(`[smpp-server] Customer inactive for: ${systemId}`)
         session.send(pdu.response({ command_status: smpp.ESME_RBINDFAIL }))
@@ -203,14 +211,21 @@ export class SMPPServer {
     session.on('submit_sm', async (pdu) => {
       sessionManager.incrementClientMsgSent(sessionId)
 
-      // Acknowledge receipt immediately
-      session.send(pdu.response({
-        command_status: smpp.ESME_ROK,
-        message_id: uuidv4(),
-      }))
+      try {
+        // Process asynchronously via queue first
+        await processor.enqueueOutbound(pdu, customerId, sessionId)
 
-      // Process asynchronously via queue
-      await processor.enqueueOutbound(pdu, customerId, sessionId)
+        // Acknowledge receipt only after successful queueing
+        session.send(pdu.response({
+          command_status: smpp.ESME_ROK,
+          message_id: uuidv4(),
+        }))
+      } catch (err) {
+        console.error(`[smpp-server] Failed to enqueue message for ${sessionId}:`, err)
+        session.send(pdu.response({
+          command_status: smpp.ESME_RSYSERR,
+        }))
+      }
     })
 
     session.on('enquire_link', (pdu) => {

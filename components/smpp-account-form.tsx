@@ -2,7 +2,7 @@
 
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
-import { Eye, EyeOff, RefreshCw, Plus, X } from 'lucide-react'
+import { Eye, EyeOff, RefreshCw, Plus, Server, X } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Switch } from '@/components/ui/switch'
@@ -17,7 +17,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Field, FieldGroup, FieldLabel } from '@/components/ui/field'
 import { Badge } from '@/components/ui/badge'
 import { createSmppAccount, updateSmppAccount, generateSystemId, generatePassword } from '@/lib/smpp-account-actions'
-import type { SmppAccount, SmppAccountFormData, Customer, BindMode } from '@/lib/types'
+import type { SmppAccount, SmppAccountFormData, CustomerOption, BindMode } from '@/lib/types'
 
 const bindModes: { value: BindMode; label: string }[] = [
   { value: 'TRX', label: 'Transceiver (TRX)' },
@@ -34,7 +34,7 @@ const encodings = [
 
 interface SmppAccountFormProps {
   account?: SmppAccount & { customer?: { id: string; name: string; ref_number: string } | null }
-  customers: Customer[]
+  customers: CustomerOption[]
   defaultSystemId?: string
   defaultPassword?: string
 }

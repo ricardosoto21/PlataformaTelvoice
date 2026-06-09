@@ -67,6 +67,13 @@ const settingsSections = [
   },
 ]
 
+type PlatformStatusItem = {
+  label: string
+  value: string
+  badge: boolean
+  variant?: 'default' | 'secondary' | 'outline'
+}
+
 export default async function SettingsPage() {
   const supabase = await createClient()
   const { data: { user } } = await supabase.auth.getUser()
@@ -77,6 +84,12 @@ export default async function SettingsPage() {
     .single()
 
   const engineStatus = 'Running'
+  const platformStatusItems: PlatformStatusItem[] = [
+    { label: 'Platform Version', value: '1.0.0', badge: false },
+    { label: 'Environment', value: 'Production', badge: true, variant: 'outline' },
+    { label: 'Database', value: 'Connected', badge: true, variant: 'default' },
+    { label: 'SMPP Engine', value: engineStatus, badge: true, variant: engineStatus === 'Running' ? 'default' : 'secondary' },
+  ]
 
   return (
     <div className="flex flex-col gap-6">
@@ -158,16 +171,11 @@ export default async function SettingsPage() {
         </CardHeader>
         <CardContent>
           <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-            {[
-              { label: 'Platform Version', value: '1.0.0', badge: false },
-              { label: 'Environment', value: 'Production', badge: true, variant: 'outline' as const },
-              { label: 'Database', value: 'Connected', badge: true, variant: 'default' as const },
-              { label: 'SMPP Engine', value: engineStatus, badge: true, variant: (engineStatus === 'Running' ? 'default' : 'secondary') as const },
-            ].map((item) => (
+            {platformStatusItems.map((item) => (
               <div key={item.label} className="flex flex-col gap-1">
                 <span className="text-xs text-muted-foreground">{item.label}</span>
                 {item.badge
-                  ? <Badge variant={item.variant} className={item.variant === 'default' ? 'w-fit bg-primary/10 text-primary border-primary/20' : 'w-fit'}>{item.value}</Badge>
+                  ? <Badge variant={item.variant ?? 'secondary'} className={item.variant === 'default' ? 'w-fit bg-primary/10 text-primary border-primary/20' : 'w-fit'}>{item.value}</Badge>
                   : <span className="text-sm font-medium">{item.value}</span>
                 }
               </div>

@@ -78,7 +78,8 @@ export class LCREngine {
     const exactMatches = rules.filter(r => r.mcc === params.mcc && r.mnc === params.mnc)
     const best = exactMatches.length > 0 ? exactMatches[0] : rules[0]
 
-    const vendor = best.vendors as { id: string; name: string } | null
+    const vendorRecord = Array.isArray(best.vendors) ? best.vendors[0] : best.vendors
+    const vendor = vendorRecord as { id: string; name: string } | null
     if (!vendor) {
       console.warn(`[lcr] Rule ${best.id} has no vendor data`)
       return null

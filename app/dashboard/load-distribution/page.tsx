@@ -14,12 +14,13 @@ import {
 import { Badge } from '@/components/ui/badge'
 import { Progress } from '@/components/ui/progress'
 import { DeleteLoadDistributionButton } from './delete-load-distribution-button'
+import type { LoadDistributionWithRelations } from '@/lib/load-distribution-actions'
 
 export default async function LoadDistributionPage() {
   const distributions = await getLoadDistributions()
 
   // Group by customer for display
-  const groupedByCustomer = distributions.reduce((acc, dist) => {
+  const groupedByCustomer = distributions.reduce<Record<string, { customer: LoadDistributionWithRelations['customer']; distributions: LoadDistributionWithRelations[] }>>((acc, dist) => {
     const customerId = dist.customer_id
     if (!acc[customerId]) {
       acc[customerId] = {
@@ -29,9 +30,9 @@ export default async function LoadDistributionPage() {
     }
     acc[customerId].distributions.push(dist)
     return acc
-  }, {} as Record<string, { customer: any; distributions: any[] }>)
+  }, {})
 
-  const getConnectionBadge = (status: string) => {
+  const getConnectionBadge = (status: string | null | undefined) => {
     switch (status) {
       case 'CONNECTED':
         return <Badge className="bg-green-500/10 text-green-500 border-green-500/20">Online</Badge>

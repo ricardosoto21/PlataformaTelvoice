@@ -19,8 +19,8 @@ session.on('connect', () => {
       // Send a test message
       console.log('Sending test message...')
       session.submit_sm({
-        destination_addr: '56927311028', // Un numero de Chile (Entel/Movistar/Claro)
-        source_addr: 'TELVOICE',
+        destination_addr: '56954108770', // Número del usuario (WOM)
+        source_addr: 'INFO', // Sender numérico (para evitar bloqueos alfanuméricos)
         short_message: 'Hello! This is a test message from the new SMPP client.'
       }, (pdu) => {
         if (pdu.command_status === 0) {
@@ -31,7 +31,7 @@ session.on('connect', () => {
 
         setTimeout(() => {
           session.unbind()
-        }, 2000)
+        }, 60000)
       })
     } else {
       console.error('Bind failed with status:', pdu.command_status)

@@ -5,28 +5,67 @@
 
 import { Queue, Worker, QueueEvents } from 'bullmq'
 import IORedis from 'ioredis'
+import net from 'net'
 import type { SMPPOutboundJob, SMPPDLRJob } from './job-types'
 
 let _connection: IORedis | null = null
+let _redisErrorLogged = false
+
+function getRedisUrl(): string | null {
+  return process.env.REDIS_URL || null
+}
+
+export async function isRedisAvailable(timeoutMs = 500): Promise<boolean> {
+  const url = getRedisUrl()
+  if (!url) return false
+
+  try {
+    const parsed = new URL(url)
+    const host = parsed.hostname || 'localhost'
+    const port = Number(parsed.port || 6379)
+
+    return await new Promise<boolean>((resolve) => {
+      const socket = net.createConnection({ host, port })
+      const done = (available: boolean) => {
+        socket.removeAllListeners()
+        socket.destroy()
+        resolve(available)
+      }
+
+      socket.setTimeout(timeoutMs)
+      socket.once('connect', () => done(true))
+      socket.once('error', () => done(false))
+      socket.once('timeout', () => done(false))
+    })
+  } catch {
+    return false
+  }
+}
 
 /** Returns the Redis connection, or null if no URL is configured (degraded mode). */
 export function getRedisConnection(): IORedis | null {
   if (_connection) return _connection
 
-  const url = process.env.REDIS_URL || process.env.UPSTASH_REDIS_REST_URL
+  const url = getRedisUrl()
   if (!url) {
     console.warn('[queue-manager] No REDIS_URL configured — BullMQ workers disabled (degraded mode)')
     return null
   }
 
   _connection = new IORedis(url, {
+    connectTimeout: 1000,
+    enableOfflineQueue: false,
     maxRetriesPerRequest: null,
     enableReadyCheck: false,
+    retryStrategy: () => null,
     tls: url.startsWith('rediss://') ? {} : undefined,
   })
 
   _connection.on('error', (err) => {
-    console.error('[queue-manager] Redis error:', err.message)
+    if (!_redisErrorLogged) {
+      console.error('[queue-manager] Redis unavailable - BullMQ is in degraded mode:', err.message)
+      _redisErrorLogged = true
+    }
   })
 
   return _connection
@@ -34,7 +73,7 @@ export function getRedisConnection(): IORedis | null {
 
 /** Returns true when a Redis connection is available */
 export function hasRedis(): boolean {
-  return !!(process.env.REDIS_URL || process.env.UPSTASH_REDIS_REST_URL)
+  return !!getRedisUrl()
 }
 
 // -------------------------------------------------------

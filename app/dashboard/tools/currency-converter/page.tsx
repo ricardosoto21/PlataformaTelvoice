@@ -6,7 +6,7 @@ export default async function CurrencyConverterPage() {
 
   const { data: currencies } = await supabase
     .from('currencies')
-    .select('code, name, symbol, exchange_rate')
+    .select('code, name, symbol, rate_to_usd')
     .eq('active', true)
     .order('code', { ascending: true })
 

@@ -89,9 +89,8 @@ export default async function OutgoingInvoiceDetailPage({
               </div>
               <div>
                 <p className="text-xs font-medium uppercase tracking-wide text-muted-foreground mb-2">Bill To</p>
-                <p className="font-semibold">{customer?.company_name ?? '—'}</p>
+                <p className="font-semibold">{customer?.name ?? '-'}</p>
                 {customer?.email && <p className="text-sm text-muted-foreground">{customer.email}</p>}
-                {customer?.address && <p className="text-sm text-muted-foreground">{customer.address}</p>}
               </div>
             </CardContent>
           </Card>
@@ -123,8 +122,8 @@ export default async function OutgoingInvoiceDetailPage({
                           <span>{item.description}</span>
                           {(item.country || item.operator) && (
                             <span className="block text-xs text-muted-foreground">
-                              {[item.country, item.operator].filter(Boolean).join(' · ')}
-                              {item.mcc && ` · MCC ${item.mcc}`}
+                              {[item.country, item.operator].filter(Boolean).join(' / ')}
+                              {item.mcc && ` / MCC ${item.mcc}`}
                               {item.mnc && `/${item.mnc}`}
                             </span>
                           )}
@@ -175,7 +174,7 @@ export default async function OutgoingInvoiceDetailPage({
               <div>
                 <p className="text-xs font-medium uppercase tracking-wide text-muted-foreground">Period</p>
                 <p className="mt-1">
-                  {format(new Date(invoice.period_start), 'MMM d')} – {format(new Date(invoice.period_end), 'MMM d, yyyy')}
+                  {format(new Date(invoice.period_start), 'MMM d')} - {format(new Date(invoice.period_end), 'MMM d, yyyy')}
                 </p>
               </div>
               {invoice.due_date && (

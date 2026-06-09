@@ -17,12 +17,12 @@ import { Label } from '@/components/ui/label'
 import { Separator } from '@/components/ui/separator'
 import { Plus, Trash2 } from 'lucide-react'
 import { createInvoice, updateInvoice, upsertInvoiceItems } from '@/lib/invoice-actions'
-import type { Customer, Invoice, InvoiceItem, InvoiceItemFormData, Vendor } from '@/lib/types'
+import type { CustomerOption, Invoice, InvoiceItem, InvoiceItemFormData, VendorOption } from '@/lib/types'
 
 interface InvoiceFormProps {
   type: 'OUTGOING' | 'INCOMING'
-  customers?: Customer[]
-  vendors?: Vendor[]
+  customers?: CustomerOption[]
+  vendors?: VendorOption[]
   invoice?: Invoice
   existingItems?: InvoiceItem[]
 }
@@ -133,9 +133,9 @@ export function InvoiceForm({ type, customers = [], vendors = [], invoice, exist
                 <SelectValue placeholder={`Select ${type === 'OUTGOING' ? 'customer' : 'vendor'}...`} />
               </SelectTrigger>
               <SelectContent>
-                {(type === 'OUTGOING' ? customers : vendors).map((p: any) => (
+                {(type === 'OUTGOING' ? customers : vendors).map((p) => (
                   <SelectItem key={p.id} value={p.id}>
-                    {type === 'OUTGOING' ? p.company_name : p.name}
+                    {type === 'OUTGOING' && 'ref_number' in p ? `${p.name} (${p.ref_number})` : p.name}
                   </SelectItem>
                 ))}
               </SelectContent>

@@ -31,46 +31,53 @@ export async function GET(req: NextRequest) {
     })
   }
 
-  // Find best route via routes + rate_plan_rates (same logic as LCREngine)
-  const { data: routes } = await supabase
-    .from('routes')
+  const { data: rules, error: rulesError } = await supabase
+    .from('lcr_rules')
     .select(`
-      id, priority, quality_score,
-      vendors!inner(id, name, status),
-      rate_plans!inner(
-        id, name,
-        rate_plan_rates(rate, mcc, mnc)
-      )
+      id, mcc, mnc, priority, cost,
+      vendor:vendors!inner(id, name, active, connection_status),
+      route:routes(id, name)
     `)
     .eq('active', true)
-    .eq('vendors.status', 'ACTIVE')
+    .eq('vendor.active', true)
+    .or(`and(mcc.eq.${mccMncRow.mcc},mnc.eq.${mccMncRow.mnc}),and(mcc.eq.000,mnc.eq.000)`)
+
+  if (rulesError) {
+    return NextResponse.json({ matched: false, reason: rulesError.message }, { status: 500 })
+  }
+
+  type RuleRow = {
+    id: string
+    mcc: string
+    mnc: string
+    priority: number | null
+    cost: number | null
+    vendor: { id: string; name: string; active: boolean; connection_status: string | null } | { id: string; name: string; active: boolean; connection_status: string | null }[] | null
+    route: { id: string; name: string } | { id: string; name: string }[] | null
+  }
 
   type Candidate = {
     vendorName: string
     routeName: string
     priority: number
     cost: number
-    qualityScore: number
+    connected: boolean
+    exact: boolean
   }
   const candidates: Candidate[] = []
 
-  for (const route of routes ?? []) {
-    const vendor = route.vendors as { id: string; name: string; status: string } | null
-    const ratePlan = route.rate_plans as { id: string; name: string; rate_plan_rates: { rate: number; mcc: string; mnc: string }[] } | null
-    if (!vendor || !ratePlan) continue
-
-    const rates = ratePlan.rate_plan_rates ?? []
-    const exactRate = rates.find((r) => r.mcc === mccMncRow!.mcc && r.mnc === mccMncRow!.mnc)
-    const wildcardRate = rates.find((r) => r.mcc === mccMncRow!.mcc && (!r.mnc || r.mnc === ''))
-    const matched = exactRate ?? wildcardRate
-    if (!matched) continue
+  for (const rule of (rules ?? []) as unknown as RuleRow[]) {
+    const vendor = Array.isArray(rule.vendor) ? rule.vendor[0] : rule.vendor
+    const route = Array.isArray(rule.route) ? rule.route[0] : rule.route
+    if (!vendor) continue
 
     candidates.push({
       vendorName: vendor.name,
-      routeName: ratePlan.name,
-      priority: route.priority ?? 0,
-      cost: matched.rate,
-      qualityScore: route.quality_score ?? 100,
+      routeName: route?.name ?? '-',
+      priority: rule.priority ?? 0,
+      cost: Number(rule.cost) || 0,
+      connected: vendor.connection_status === 'CONNECTED',
+      exact: rule.mcc === mccMncRow.mcc && rule.mnc === mccMncRow.mnc,
     })
   }
 
@@ -86,9 +93,10 @@ export async function GET(req: NextRequest) {
   }
 
   candidates.sort((a, b) => {
+    if (a.connected !== b.connected) return a.connected ? -1 : 1
+    if (a.exact !== b.exact) return a.exact ? -1 : 1
     if (a.cost !== b.cost) return a.cost - b.cost
-    if (a.qualityScore !== b.qualityScore) return b.qualityScore - a.qualityScore
-    return b.priority - a.priority
+    return a.priority - b.priority
   })
 
   const best = candidates[0]

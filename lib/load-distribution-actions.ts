@@ -2,7 +2,12 @@
 
 import { revalidatePath } from 'next/cache'
 import { createClient } from '@/lib/supabase/server'
-import type { LoadDistributionFormData } from '@/lib/types'
+import type { LoadDistribution, LoadDistributionFormData } from '@/lib/types'
+
+export type LoadDistributionWithRelations = LoadDistribution & {
+  customer: { id: string; name: string; ref_number: string } | null
+  vendor: { id: string; name: string; connection_status: string | null } | null
+}
 
 export async function getLoadDistributions() {
   const supabase = await createClient()
@@ -18,7 +23,7 @@ export async function getLoadDistributions() {
     .order('mnc', { ascending: true })
 
   if (error) throw error
-  return data
+  return (data ?? []) as unknown as LoadDistributionWithRelations[]
 }
 
 export async function getLoadDistribution(id: string) {

@@ -38,7 +38,17 @@ export async function POST(
     }
 
     const clientManager = SMPPClientManager.getInstance()
-    await clientManager.connectVendor(account as Parameters<typeof clientManager.connectVendor>[0])
+    const vendorRecord = Array.isArray(account.vendors) ? account.vendors[0] : account.vendors
+    await clientManager.connectVendor({
+      id: account.id,
+      system_id: account.system_id,
+      password: account.password,
+      host: account.host,
+      port: account.port,
+      bind_mode: account.bind_mode,
+      vendor_id: account.vendor_id,
+      vendors: vendorRecord ?? null,
+    })
 
     return NextResponse.json({ success: true })
   } catch (err: unknown) {

@@ -35,6 +35,7 @@ declare module 'smpp' {
     // message_state (DLR)
     message_state?: number
     receipted_message_id?: string
+    response(options?: Partial<PDU>): PDU
     // generic nack
     [key: string]: unknown
   }
@@ -52,7 +53,12 @@ declare module 'smpp' {
     resume(): void
     close(): void
     destroy(): void
+    bind_receiver(options: Partial<PDU>, callback: (pdu: PDU) => void): void
+    bind_transmitter(options: Partial<PDU>, callback: (pdu: PDU) => void): void
+    bind_transceiver(options: Partial<PDU>, callback: (pdu: PDU) => void): void
+    submit_sm(options: Partial<PDU>, callback: (pdu: PDU) => void): void
 
+    on(event: 'connect', listener: () => void): this
     on(event: 'bind_transceiver', listener: (pdu: PDU) => void): this
     on(event: 'bind_transmitter', listener: (pdu: PDU) => void): this
     on(event: 'bind_receiver', listener: (pdu: PDU) => void): this
@@ -108,6 +114,7 @@ declare module 'smpp' {
   export const ESME_RBINDFAIL: number
   export const ESME_RTHROTTLED: number
   export const ESME_RINVDSTADR: number
+  export const ESME_RSYSERR: number
 
   // -------------------------------------------------------
   // Message states (DLR)

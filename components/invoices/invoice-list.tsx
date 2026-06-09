@@ -71,8 +71,8 @@ export function InvoiceList({ invoices, type }: InvoiceListProps) {
               invoices.map((invoice) => {
                 const config = statusConfig[invoice.status]
                 const party = type === 'OUTGOING'
-                  ? (invoice.customer as any)?.company_name ?? '—'
-                  : (invoice.vendor as any)?.name ?? '—'
+                  ? (invoice.customer as any)?.name ?? '-'
+                  : (invoice.vendor as any)?.name ?? '-'
 
                 return (
                   <TableRow key={invoice.id}>
@@ -81,13 +81,13 @@ export function InvoiceList({ invoices, type }: InvoiceListProps) {
                     </TableCell>
                     <TableCell>{party}</TableCell>
                     <TableCell className="text-sm text-muted-foreground">
-                      {format(new Date(invoice.period_start), 'MMM d')} –{' '}
+                      {format(new Date(invoice.period_start), 'MMM d')} -{' '}
                       {format(new Date(invoice.period_end), 'MMM d, yyyy')}
                     </TableCell>
                     <TableCell className="text-sm">
                       {invoice.due_date
                         ? format(new Date(invoice.due_date), 'MMM d, yyyy')
-                        : '—'}
+                        : '-'}
                     </TableCell>
                     <TableCell className="text-right font-medium">
                       {invoice.currency}{' '}

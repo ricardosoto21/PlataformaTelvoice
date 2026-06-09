@@ -161,7 +161,7 @@ export function CurrencyConverterClient({ currencies }: { currencies: Currency[]
               >
                 <span className="font-mono font-medium">{c.code}</span>
                 <span className="text-muted-foreground font-mono text-xs">
-                  {c.exchange_rate != null ? c.exchange_rate.toFixed(4) : '—'}
+                  {c.rate_to_usd != null ? c.rate_to_usd.toFixed(4) : '-'}
                 </span>
               </div>
             ))}

@@ -81,6 +81,51 @@ export async function deleteLcrRule(id: string) {
   revalidatePath('/dashboard/lcr')
 }
 
+export async function getCountries() {
+  const supabase = await createClient()
+  const { data, error } = await supabase
+    .from('mcc_mnc')
+    .select('country')
+    .eq('active', true)
+
+  if (error) throw error
+  
+  const uniqueCountries = Array.from(new Set(data.map(d => d.country))).filter(Boolean).sort()
+  return uniqueCountries
+}
+
+export async function getOperatorsByCountry(country: string) {
+  const supabase = await createClient()
+  const { data, error } = await supabase
+    .from('mcc_mnc')
+    .select('*')
+    .eq('country', country)
+    .eq('active', true)
+    .order('operator', { ascending: true })
+
+  if (error) throw error
+  return data
+}
+
+export async function createBulkLcrRules(rules: LcrRuleFormData[]) {
+  const supabase = await createClient()
+  const { data: { user } } = await supabase.auth.getUser()
+
+  const rulesWithUser = rules.map(rule => ({
+    ...rule,
+    created_by: user?.id,
+  }))
+
+  const { data, error } = await supabase
+    .from('lcr_rules')
+    .insert(rulesWithUser)
+    .select()
+
+  if (error) throw error
+  revalidatePath('/dashboard/lcr')
+  return data
+}
+
 // LCR Exclusions
 export async function getLcrExclusions() {
   const supabase = await createClient()

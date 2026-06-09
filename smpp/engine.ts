@@ -52,7 +52,7 @@ export class SMPPEngine {
       await this.smppServer.start(port)
 
       // 2. Start outbound worker (BullMQ)
-      const worker = startOutboundWorker()
+      const worker = await startOutboundWorker()
       this.workers.push(worker)
 
       // 3. Connect to all vendor SMPP accounts

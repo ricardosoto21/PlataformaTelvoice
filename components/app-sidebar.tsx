@@ -240,7 +240,7 @@ export function AppSidebar({ profile }: AppSidebarProps) {
     setOpenSections((prev) => ({ ...prev, [label]: !prev[label] }))
   }
 
-  const getInitials = (name: string | null) => {
+  const getInitials = (name: string | null | undefined) => {
     if (!name) return 'U'
     return name.split(' ').map((n) => n[0]).join('').toUpperCase().slice(0, 2)
   }

@@ -4,6 +4,11 @@
  */
 
 import * as smpp from 'smpp'
+try {
+  smpp.addTLV('vendor_mcc', { id: 0x1401, type: smpp.types.tlv.string })
+  smpp.addTLV('vendor_mnc', { id: 0x1402, type: smpp.types.tlv.string })
+  smpp.addTLV('vendor_mccmnc', { id: 0x1400, type: smpp.types.tlv.string })
+} catch (e) {}
 import { v4 as uuidv4 } from 'uuid'
 import { getEngineDb } from './db'
 import { SessionManager } from './session-manager'
@@ -15,6 +20,19 @@ export interface SubmitResult {
   success: boolean
   messageId?: string
   error?: string
+}
+
+interface VendorConnectionAccount {
+  id: string
+  system_id: string
+  password: string
+  host: string
+  port: number
+  bind_mode: string
+  vendor_id: string
+  ton?: number
+  npi?: number
+  vendors: { id: string; name: string } | null
 }
 
 export class SMPPClientManager {
@@ -37,7 +55,7 @@ export class SMPPClientManager {
     // it already stores all SMPP credentials (smpp_host, smpp_port, etc.)
     const { data: vendors } = await db
       .from('vendors')
-      .select('id, name, smpp_host, smpp_port, smpp_system_id, smpp_password, smpp_bind_mode, active')
+      .select('id, name, smpp_host, smpp_port, smpp_system_id, smpp_password, smpp_bind_mode, smpp_ton, smpp_npi, active')
       .eq('active', true)
 
     if (!vendors) return
@@ -55,21 +73,14 @@ export class SMPPClientManager {
         port: vendor.smpp_port ?? 2775,
         bind_mode: vendor.smpp_bind_mode ?? 'TRX',
         vendor_id: vendor.id,
+        ton: vendor.smpp_ton ?? 1,
+        npi: vendor.smpp_npi ?? 1,
         vendors: { id: vendor.id, name: vendor.name },
       })
     }
   }
 
-  async connectVendor(account: {
-    id: string
-    system_id: string
-    password: string
-    host: string
-    port: number
-    bind_mode: string
-    vendor_id: string
-    vendors: { id: string; name: string } | null
-  }): Promise<void> {
+  async connectVendor(account: VendorConnectionAccount): Promise<void> {
     const vendorId = account.vendor_id
     const existing = sessionManager.getVendor(vendorId)
 
@@ -95,6 +106,8 @@ export class SMPPClientManager {
         port: account.port,
         systemId: account.system_id,
         bindMode,
+        ton: account.ton ?? 1,
+        npi: account.npi ?? 1,
         session: null,
         connectedAt: null,
         reconnecting: false,
@@ -126,18 +139,14 @@ export class SMPPClientManager {
     }
   }
 
-  private doConnect(account: {
-    id: string
-    system_id: string
-    password: string
-    host: string
-    port: number
-    bind_mode: string
-    vendor_id: string
-    vendors: { id: string; name: string } | null
-  }): void {
+  private doConnect(account: VendorConnectionAccount): void {
     const vendorId = account.vendor_id
     const vendorName = account.vendors?.name ?? vendorId
+    const bindModeMap: Record<string, 'transceiver' | 'transmitter' | 'receiver'> = {
+      TRX: 'transceiver', TX: 'transmitter', RX: 'receiver',
+      transceiver: 'transceiver', transmitter: 'transmitter', receiver: 'receiver',
+    }
+    const bindMode = bindModeMap[account.bind_mode] ?? 'transceiver'
 
     try {
       const session = smpp.connect({
@@ -148,7 +157,7 @@ export class SMPPClientManager {
       })
 
       // Use the proper smpp library bind methods (same as test-client.mjs)
-      session.on('connect' as 'error', () => {
+      session.on('connect', () => {
         const bindParams = {
           system_id: account.system_id,
           password: account.password,
@@ -172,9 +181,9 @@ export class SMPPClientManager {
           }
         }
 
-        if (account.bind_mode === 'receiver') {
+        if (bindMode === 'receiver') {
           session.bind_receiver(bindParams, handleBindResp)
-        } else if (account.bind_mode === 'transmitter') {
+        } else if (bindMode === 'transmitter') {
           session.bind_transmitter(bindParams, handleBindResp)
         } else {
           session.bind_transceiver(bindParams, handleBindResp)
@@ -208,7 +217,7 @@ export class SMPPClientManager {
     }
   }
 
-  private scheduleReconnect(account: Parameters<SMPPClientManager['doConnect']>[0]): void {
+  private scheduleReconnect(account: VendorConnectionAccount): void {
     const vendorId = account.vendor_id
     if (this.reconnectTimers.has(vendorId)) return
 
@@ -235,6 +244,8 @@ export class SMPPClientManager {
       destAddr: string
       shortMessage: string
       dataCoding?: number
+      mcc?: string
+      mnc?: string
     }
   ): Promise<SubmitResult> {
     const vendor = sessionManager.getVendor(vendorId)
@@ -243,6 +254,17 @@ export class SMPPClientManager {
     }
 
     const messageId = uuidv4()
+    const isNumericSource = /^\+?\d+$/.test(msg.sourceAddr)
+    const sourceAddrTon = isNumericSource ? vendor.ton : 5
+    const sourceAddrNpi = isNumericSource ? vendor.npi : 0
+    const normalizedDestAddr = msg.destAddr.replace(/^\+/, '')
+    const destinationAddr = normalizedDestAddr
+
+    console.log(
+      `[smpp-client] submit_sm to ${vendor.vendorName}: ` +
+      `src=${msg.sourceAddr} ton/npi=${sourceAddrTon}/${sourceAddrNpi}, ` +
+      `dst=${destinationAddr} ton/npi=${vendor.ton}/${vendor.npi}`
+    )
 
     return new Promise((resolve) => {
       const timeout = setTimeout(() => {
@@ -251,11 +273,20 @@ export class SMPPClientManager {
 
       // Use the smpp library's submit_sm method (callback receives submit_sm_resp)
       vendor.session!.submit_sm({
+        source_addr_ton: sourceAddrTon,
+        source_addr_npi: sourceAddrNpi,
         source_addr: msg.sourceAddr,
-        destination_addr: msg.destAddr,
+        dest_addr_ton: vendor.ton,
+        dest_addr_npi: vendor.npi,
+        destination_addr: destinationAddr,
         short_message: msg.shortMessage,
         data_coding: msg.dataCoding ?? 0,
         registered_delivery: 1, // Request DLR
+        dest_network_type: 2, // 2 = GSM
+        dest_network_id: msg.mcc && msg.mnc ? `${msg.mcc}${msg.mnc}` : undefined,
+        vendor_mcc: msg.mcc,
+        vendor_mnc: msg.mnc,
+        vendor_mccmnc: msg.mcc && msg.mnc ? `${msg.mcc}${msg.mnc}` : undefined,
       }, (respPdu: smpp.PDU) => {
         clearTimeout(timeout)
         if (respPdu.command_status === 0) {
@@ -283,7 +314,6 @@ export class SMPPClientManager {
     sessionManager.updateVendorStatus(vendorId, 'disconnected', null)
     this.updateDbStatus(vendorId, 'DISCONNECTED')
   }
-
 
   async disconnectAll(): Promise<void> {
     for (const vendor of sessionManager.getAllVendors()) {

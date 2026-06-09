@@ -15,7 +15,7 @@ export async function signIn(formData: FormData) {
     password,
   })
 
-  const headersList = headers()
+  const headersList = await headers()
   const ip = headersList.get('x-forwarded-for') || headersList.get('x-real-ip') || '127.0.0.1'
   const userAgent = headersList.get('user-agent') || 'Unknown'
 

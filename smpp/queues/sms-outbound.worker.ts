@@ -4,7 +4,7 @@
  */
 
 import { Worker } from 'bullmq'
-import { getRedisConnection, QUEUE_NAMES, hasRedis } from './queue-manager'
+import { getRedisConnection, isRedisAvailable, QUEUE_NAMES } from './queue-manager'
 import { LCREngine } from '../lcr-engine'
 import { BillingEngine } from '../billing-engine'
 import { SMPPClientManager } from '../smpp-client'
@@ -15,7 +15,13 @@ const lcr = LCREngine.getInstance()
 const billing = BillingEngine.getInstance()
 const clientManager = SMPPClientManager.getInstance()
 
-export function startOutboundWorker(): Worker<SMPPOutboundJob> | null {
+export async function startOutboundWorker(): Promise<Worker<SMPPOutboundJob> | null> {
+  const redisAvailable = await isRedisAvailable()
+  if (!redisAvailable) {
+    console.warn('[worker:outbound] Redis not reachable - outbound worker disabled')
+    return null
+  }
+
   const conn = getRedisConnection()
   if (!conn) {
     console.warn('[worker:outbound] Redis not available — outbound worker disabled')
@@ -124,6 +130,8 @@ export function startOutboundWorker(): Worker<SMPPOutboundJob> | null {
         destAddr: data.destAddr,
         shortMessage: translatedMessage,
         dataCoding: data.dataCoding,
+        mcc,
+        mnc,
       })
 
       if (!result.success) {
@@ -170,10 +178,46 @@ async function resolveMccMnc(destAddr: string): Promise<{
   mcc: string; mnc: string; country: string; operator: string
 } | null> {
   // Strip non-digits and leading +
-  const digits = destAddr.replace(/\D/g, '')
+  const digits = destAddr.replace(/\D/g, '').replace(/^00/, '')
   if (digits.length < 5) return null
 
   const db = getEngineDb()
+
+  // MSISDN/E.164 fallback. A production-grade system should use HLR/MNP or
+  // a phone-prefix table; for the prototype we map country code to the MCC and
+  // select a configured default MNC so LCR can route normal phone numbers.
+  const e164Fallbacks = [
+    { countryCode: '598', mcc: '748', preferredMnc: '010' },
+    { countryCode: '56', mcc: '730', preferredMnc: '01' },
+    { countryCode: '57', mcc: '732', preferredMnc: '101' },
+    { countryCode: '55', mcc: '724', preferredMnc: '006' },
+    { countryCode: '54', mcc: '722', preferredMnc: '070' },
+    { countryCode: '52', mcc: '334', preferredMnc: '020' },
+    { countryCode: '51', mcc: '716', preferredMnc: '010' },
+    { countryCode: '1', mcc: '310', preferredMnc: '260' },
+  ]
+
+  for (const fallback of e164Fallbacks) {
+    if (!digits.startsWith(fallback.countryCode)) continue
+
+    const { data: exact } = await db
+      .from('mcc_mnc')
+      .select('mcc, mnc, country, operator')
+      .eq('mcc', fallback.mcc)
+      .eq('mnc', fallback.preferredMnc)
+      .single()
+
+    if (exact) return exact
+
+    const { data: countryRows } = await db
+      .from('mcc_mnc')
+      .select('mcc, mnc, country, operator')
+      .eq('mcc', fallback.mcc)
+      .order('mnc', { ascending: true })
+      .limit(1)
+
+    if (countryRows?.[0]) return countryRows[0]
+  }
 
   // Try progressively shorter prefixes: 3+3, 3+2 digit MCC+MNC combos
   for (const mncLen of [3, 2]) {

@@ -26,6 +26,7 @@ export interface Customer {
   currency: Currency
   balance: number
   credit_limit: number
+  rate_plan_id: string | null
   active: boolean
   parent_id: string | null
   notes: string | null
@@ -60,6 +61,9 @@ export interface Vendor {
   updated_at: string
 }
 
+export type CustomerOption = Pick<Customer, 'id' | 'name' | 'ref_number'>
+export type VendorOption = Pick<Vendor, 'id' | 'name'>
+
 export interface SmppAccount {
   id: string
   customer_id: string
@@ -88,6 +92,7 @@ export interface CustomerFormData {
   currency: Currency
   balance?: number
   credit_limit?: number
+  rate_plan_id?: string
   active?: boolean
   parent_id?: string
   notes?: string
@@ -486,7 +491,7 @@ export interface ReportFilters {
   endDate?: string
   customerId?: string
   vendorId?: string
-  status?: MessageStatus
+  status?: MessageStatus | 'all'
   country?: string
   mcc?: string
 }
